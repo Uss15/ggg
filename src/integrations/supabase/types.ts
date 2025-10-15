@@ -150,7 +150,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          badge_number: string | null
+          full_name: string | null
+          id: string | null
+        }
+        Insert: {
+          badge_number?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          badge_number?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_bag_id: {

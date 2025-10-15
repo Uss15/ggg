@@ -132,7 +132,7 @@ export const getChainOfCustody = async (bagId: string) => {
     .from('chain_of_custody_log')
     .select(`
       *,
-      performed_by_profile:profiles!chain_of_custody_log_performed_by_fkey(full_name, badge_number)
+      performed_by_profile:profiles_public!chain_of_custody_log_performed_by_fkey(full_name, badge_number)
     `)
     .eq('bag_id', bagId)
     .order('timestamp', { ascending: true });
@@ -158,7 +158,7 @@ export const getAllEvidenceBags = async () => {
     .from('evidence_bags')
     .select(`
       *,
-      collector:profiles!evidence_bags_initial_collector_fkey(full_name, badge_number)
+      collector:profiles_public!evidence_bags_initial_collector_fkey(full_name, badge_number)
     `)
     .order('created_at', { ascending: false });
 
