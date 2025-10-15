@@ -47,6 +47,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        status: {
+          collected: "hsl(var(--status-collected))",
+          inTransport: "hsl(var(--status-in-transport))",
+          inLab: "hsl(var(--status-in-lab))",
+          analyzed: "hsl(var(--status-analyzed))",
+          archived: "hsl(var(--status-archived))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
