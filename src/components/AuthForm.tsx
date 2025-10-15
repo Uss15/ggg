@@ -6,6 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Shield } from "lucide-react";
+import { z } from "zod";
+
+// Input validation schemas
+const loginSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+  password: z.string().min(1, "Password required"),
+});
+
+const signupSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100),
+  fullName: z.string().trim().min(2, "Name too short").max(100, "Name too long"),
+  badgeNumber: z.string().trim().max(50).optional(),
+});
 
 export const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,20 +35,32 @@ export const AuthForm = () => {
 
     try {
       if (isLogin) {
+        // Validate login inputs
+        const validatedData = loginSchema.parse({ email, password });
+        
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validatedData.email,
+          password: validatedData.password,
         });
         if (error) throw error;
         toast.success("Signed in successfully");
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Validate signup inputs
+        const validatedData = signupSchema.parse({
           email,
           password,
+          fullName,
+          badgeNumber: badgeNumber || undefined,
+        });
+        
+        const { error } = await supabase.auth.signUp({
+          email: validatedData.email,
+          password: validatedData.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`,
             data: {
-              full_name: fullName,
-              badge_number: badgeNumber,
+              full_name: validatedData.fullName,
+              badge_number: validatedData.badgeNumber || null,
             },
           },
         });
@@ -42,7 +68,11 @@ export const AuthForm = () => {
         toast.success("Account created successfully");
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Authentication failed");
+      }
     } finally {
       setLoading(false);
     }

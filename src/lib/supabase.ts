@@ -40,6 +40,22 @@ export interface ChainOfCustodyLog {
   created_at: string;
 }
 
+/**
+ * WARNING: This function is for UI DISPLAY ONLY. NEVER use for authorization!
+ * 
+ * This client-side function can be bypassed by modifying browser code.
+ * All authorization MUST be enforced server-side via RLS policies.
+ * 
+ * Use this ONLY for:
+ * - Showing/hiding UI elements for better UX
+ * - Displaying user role badges
+ * - Client-side navigation hints
+ * 
+ * NEVER use for:
+ * - Gating access to features or data
+ * - Authorization decisions
+ * - Security enforcement
+ */
 export const getUserRoles = async (userId: string) => {
   const { data, error } = await supabase
     .from('user_roles')
@@ -50,6 +66,12 @@ export const getUserRoles = async (userId: string) => {
   return data?.map(r => r.role) || [];
 };
 
+/**
+ * WARNING: This function is for UI DISPLAY ONLY. NEVER use for authorization!
+ * 
+ * See getUserRoles() documentation above for security warnings.
+ * Always rely on RLS policies for actual security enforcement.
+ */
 export const hasRole = async (userId: string, role: UserRole): Promise<boolean> => {
   const roles = await getUserRoles(userId);
   return roles.includes(role);
