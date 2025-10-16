@@ -100,6 +100,44 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence_photos: {
+        Row: {
+          bag_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          photo_url: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          bag_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_url: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          bag_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_url?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_photos_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_bags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           badge_number: string | null

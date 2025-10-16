@@ -165,3 +165,60 @@ export const getAllEvidenceBags = async () => {
   if (error) throw error;
   return data;
 };
+
+export interface EvidencePhoto {
+  id: string;
+  bag_id: string;
+  photo_url: string;
+  uploaded_by: string;
+  uploaded_at: string;
+  notes?: string;
+  created_at: string;
+}
+
+export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const filePath = `${bagId}/${fileName}`;
+
+  // Upload file to storage
+  const { error: uploadError } = await supabase.storage
+    .from('evidence-photos')
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('evidence-photos')
+    .getPublicUrl(filePath);
+
+  // Save metadata to database
+  const { data, error } = await supabase
+    .from('evidence_photos')
+    .insert({
+      bag_id: bagId,
+      photo_url: publicUrl,
+      uploaded_by: user.id,
+      notes: notes || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getEvidencePhotos = async (bagId: string) => {
+  const { data, error } = await supabase
+    .from('evidence_photos')
+    .select('*')
+    .eq('bag_id', bagId)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
