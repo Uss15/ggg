@@ -13,7 +13,8 @@ import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateBagId, createEvidenceBag, addChainOfCustodyEntry } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const bagSchema = z.object({
   type: z.enum(["weapon", "clothing", "biological_sample", "documents", "electronics", "other"]),
@@ -109,21 +110,32 @@ export default function CreateBag() {
         <Header userName={userName} />
         <main className="container mx-auto px-4 py-8 max-w-2xl">
           <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold text-foreground">Evidence Bag Created!</h1>
-              <p className="text-muted-foreground">Bag ID: {createdBag.bag_id}</p>
-            </div>
+            <Card className="border-primary bg-primary/5">
+              <CardHeader className="text-center pb-3">
+                <div className="flex justify-center mb-3">
+                  <CheckCircle2 className="h-16 w-16 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Evidence Bag Created Successfully!</CardTitle>
+                <CardDescription className="text-base">
+                  Bag ID: <span className="font-mono font-semibold text-foreground">{createdBag.bag_id}</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-sm text-muted-foreground mb-4">
+                  The evidence bag has been registered in the system and is ready for tracking.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={() => navigate(`/bag/${createdBag.bag_id}`)} className="flex-1">
+                    View Evidence Bag
+                  </Button>
+                  <Button onClick={() => setCreatedBag(null)} variant="outline" className="flex-1">
+                    Create Another
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <QRCodeDisplay bagId={createdBag.bag_id} url={`${window.location.origin}/bag/${createdBag.bag_id}`} />
-
-            <div className="flex gap-4">
-              <Button onClick={() => navigate(`/bag/${createdBag.bag_id}`)} className="flex-1">
-                View Bag Details
-              </Button>
-              <Button onClick={() => navigate("/create")} variant="outline" className="flex-1">
-                Create Another Bag
-              </Button>
-            </div>
           </div>
         </main>
       </div>
