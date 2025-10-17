@@ -7,19 +7,26 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { CustodyTimeline } from "@/components/evidence/CustodyTimeline";
 import { AddCustodyModal } from "@/components/evidence/AddCustodyModal";
-import { ArrowLeft, Plus } from "lucide-react";
+import { PhotoUpload } from "@/components/evidence/PhotoUpload";
+import { PhotoGallery } from "@/components/evidence/PhotoGallery";
+import { ArrowLeft, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { getEvidenceBag, getChainOfCustody } from "@/lib/supabase";
+import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
-import type { EvidenceBag, ChainOfCustodyLog } from "@/lib/supabase";
+import type { EvidenceBag, ChainOfCustodyLog, EvidencePhoto } from "@/lib/supabase";
+import { z } from "zod";
+
+const bagIdSchema = z.string().regex(/^BAG-\d{4}-\d{4}$/, "Invalid bag ID format");
 
 export default function BagDetail() {
   const { bagId } = useParams<{ bagId: string }>();
   const navigate = useNavigate();
   const [bag, setBag] = useState<EvidenceBag | null>(null);
   const [custody, setCustody] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<EvidencePhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddCustody, setShowAddCustody] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
@@ -40,11 +47,19 @@ export default function BagDetail() {
   const loadBagData = async () => {
     if (!bagId) return;
     
+    const validation = bagIdSchema.safeParse(bagId);
+    if (!validation.success) {
+      toast.error("Invalid bag ID format. Expected format: BAG-YYYY-NNNN");
+      navigate("/dashboard");
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      const [bagData, custodyData] = await Promise.all([
+      const [bagData, custodyData, photosData] = await Promise.all([
         getEvidenceBag(bagId),
         getChainOfCustody(bagId),
+        getEvidencePhotos(bagId),
       ]);
 
       if (!bagData) {
@@ -55,8 +70,11 @@ export default function BagDetail() {
 
       setBag(bagData);
       setCustody(custodyData || []);
+      setPhotos(photosData || []);
     } catch (error: any) {
-      console.error("Error loading bag:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading bag:", error);
+      }
       toast.error("Failed to load evidence bag");
     } finally {
       setIsLoading(false);
@@ -149,6 +167,27 @@ export default function BagDetail() {
 
             <QRCodeDisplay bagId={bag.bag_id} url={bag.qr_data || ""} />
           </div>
+
+          <PhotoGallery photos={photos} />
+
+          {showPhotoUpload ? (
+            <PhotoUpload 
+              bagId={bag.id} 
+              onUploadComplete={() => {
+                loadBagData();
+                setShowPhotoUpload(false);
+              }}
+            />
+          ) : (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowPhotoUpload(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Evidence Photos
+            </Button>
+          )}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

@@ -94,7 +94,9 @@ export default function CreateBag() {
       setCreatedBag({ bag_id: bagId, id: bag.id });
       toast.success("Evidence bag created successfully");
     } catch (error: any) {
-      console.error("Error creating bag:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error creating bag:", error);
+      }
       toast.error(error.message || "Failed to create evidence bag");
     } finally {
       setIsLoading(false);

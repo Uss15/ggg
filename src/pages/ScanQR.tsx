@@ -8,6 +8,9 @@ import { Search, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { getEvidenceBag } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const bagIdSchema = z.string().regex(/^BAG-\d{4}-\d{4}$/, "Invalid bag ID format");
 
 export default function ScanQR() {
   const navigate = useNavigate();
@@ -37,6 +40,12 @@ export default function ScanQR() {
       return;
     }
 
+    const validation = bagIdSchema.safeParse(bagId.trim());
+    if (!validation.success) {
+      toast.error("Invalid bag ID format. Expected format: BAG-YYYY-NNNN");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const bag = await getEvidenceBag(bagId.trim());
@@ -46,7 +55,9 @@ export default function ScanQR() {
         toast.error("Evidence bag not found");
       }
     } catch (error: any) {
-      console.error("Error finding bag:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error finding bag:", error);
+      }
       toast.error("Failed to find evidence bag");
     } finally {
       setIsLoading(false);

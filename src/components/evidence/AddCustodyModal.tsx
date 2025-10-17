@@ -78,7 +78,9 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error adding custody entry:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error adding custody entry:", error);
+      }
       toast.error(error.message || "Failed to add custody entry");
     } finally {
       setIsLoading(false);
