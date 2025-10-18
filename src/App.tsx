@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateBag from "./pages/CreateBag";
 import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,10 @@ const App = () => {
             <Route
               path="/bag/:bagId"
               element={session ? <BagDetail /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/admin"
+              element={session ? <AdminDashboard /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
