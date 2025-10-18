@@ -128,17 +128,31 @@ export const getEvidenceBag = async (bagId: string) => {
 };
 
 export const getChainOfCustody = async (bagId: string) => {
-  const { data, error } = await supabase
+  const { data: logs, error } = await supabase
     .from('chain_of_custody_log')
-    .select(`
-      *,
-      performed_by_profile:profiles_public!chain_of_custody_log_performed_by_fkey(full_name, badge_number)
-    `)
+    .select('*')
     .eq('bag_id', bagId)
     .order('timestamp', { ascending: true });
 
   if (error) throw error;
-  return data;
+  
+  // Fetch performer profiles separately
+  if (logs && logs.length > 0) {
+    const userIds = [...new Set(logs.map(log => log.performed_by))];
+    const { data: profiles } = await supabase
+      .from('profiles_public')
+      .select('*')
+      .in('id', userIds);
+    
+    // Map profiles to logs
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    return logs.map(log => ({
+      ...log,
+      performed_by_profile: profileMap.get(log.performed_by)
+    }));
+  }
+  
+  return logs;
 };
 
 export const updateEvidenceBagStatus = async (id: string, status: EvidenceStatus) => {
@@ -154,16 +168,30 @@ export const updateEvidenceBagStatus = async (id: string, status: EvidenceStatus
 };
 
 export const getAllEvidenceBags = async () => {
-  const { data, error } = await supabase
+  const { data: bags, error } = await supabase
     .from('evidence_bags')
-    .select(`
-      *,
-      collector:profiles_public!evidence_bags_initial_collector_fkey(full_name, badge_number)
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  
+  // Fetch collector profiles separately
+  if (bags && bags.length > 0) {
+    const collectorIds = [...new Set(bags.map(bag => bag.initial_collector))];
+    const { data: collectors } = await supabase
+      .from('profiles_public')
+      .select('*')
+      .in('id', collectorIds);
+    
+    // Map collectors to bags
+    const collectorMap = new Map(collectors?.map(c => [c.id, c]) || []);
+    return bags.map(bag => ({
+      ...bag,
+      collector: collectorMap.get(bag.initial_collector)
+    }));
+  }
+  
+  return bags;
 };
 
 export interface EvidencePhoto {

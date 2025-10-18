@@ -208,6 +208,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_bag: {
+        Args: { _bag_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_bag_id: {
         Args: Record<PropertyKey, never>
         Returns: string
