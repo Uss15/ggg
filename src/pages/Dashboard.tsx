@@ -39,7 +39,8 @@ export default function Dashboard() {
       setBags(bagsData || []);
       setFilteredBags(bagsData || []);
     } catch (error: any) {
-      toast.error("Error loading data");
+      console.error("Dashboard error:", error);
+      toast.error(error.message || "Error loading data");
     } finally {
       setLoading(false);
     }
