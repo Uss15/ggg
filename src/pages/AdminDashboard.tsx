@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BarChart, Users, Package, FileText } from "lucide-react";
+import { BarChart, Users, Package, FileText, TrendingUp } from "lucide-react";
 import { UserRoleManager } from "@/components/admin/UserRoleManager";
+import { StatsChart } from "@/components/admin/StatsChart";
 import { getProfile, hasRole } from "@/lib/supabase";
 
 export default function AdminDashboard() {
@@ -155,8 +156,12 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
-          <Tabs defaultValue="users" className="space-y-4">
+          <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
+              <TabsTrigger value="overview">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Overview
+              </TabsTrigger>
               <TabsTrigger value="users">
                 <Users className="h-4 w-4 mr-2" />
                 User Management
@@ -166,6 +171,10 @@ export default function AdminDashboard() {
                 Reports
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              <StatsChart stats={stats} />
+            </TabsContent>
 
             <TabsContent value="users" className="space-y-4">
               <UserRoleManager />
@@ -177,7 +186,7 @@ export default function AdminDashboard() {
                   <CardTitle>System Reports</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Report generation coming soon</p>
+                  <p className="text-muted-foreground">Export and reporting features coming soon</p>
                 </CardContent>
               </Card>
             </TabsContent>

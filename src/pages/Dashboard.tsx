@@ -24,6 +24,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
+
+    // Set up real-time subscription for new bags
+    const channel = supabase
+      .channel("evidence-bags-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "evidence_bags",
+        },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadData = async () => {
