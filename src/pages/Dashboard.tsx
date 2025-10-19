@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
+import { StatusFilter } from "@/components/StatusFilter";
+import { DashboardStats } from "@/components/DashboardStats";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
+import type { EvidenceStatus } from "@/lib/supabase";
 import { Plus, QrCode, Search, Package } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,6 +20,7 @@ export default function Dashboard() {
   const [filteredBags, setFilteredBags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<EvidenceStatus | "all">("all");
 
   useEffect(() => {
     loadData();
@@ -47,21 +51,44 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredBags(bags);
-    } else {
+    let filtered = bags;
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((bag) => bag.current_status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
-      setFilteredBags(
-        bags.filter(
-          (bag) =>
-            bag.bag_id.toLowerCase().includes(query) ||
-            bag.description.toLowerCase().includes(query) ||
-            bag.location.toLowerCase().includes(query) ||
-            bag.type.toLowerCase().includes(query)
-        )
+      filtered = filtered.filter(
+        (bag) =>
+          bag.bag_id.toLowerCase().includes(query) ||
+          bag.description.toLowerCase().includes(query) ||
+          bag.location.toLowerCase().includes(query) ||
+          bag.type.toLowerCase().includes(query)
       );
     }
-  }, [searchQuery, bags]);
+
+    setFilteredBags(filtered);
+  }, [searchQuery, statusFilter, bags]);
+
+  const getStatusCounts = () => {
+    const counts: Record<EvidenceStatus | "all", number> = {
+      all: bags.length,
+      collected: 0,
+      in_transport: 0,
+      in_lab: 0,
+      analyzed: 0,
+      archived: 0,
+    };
+
+    bags.forEach((bag) => {
+      counts[bag.current_status] = (counts[bag.current_status] || 0) + 1;
+    });
+
+    return counts;
+  };
 
   if (loading) {
     return (
@@ -103,6 +130,8 @@ export default function Dashboard() {
             </div>
           </div>
 
+          <DashboardStats bags={bags} />
+
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -112,6 +141,12 @@ export default function Dashboard() {
               className="pl-9"
             />
           </div>
+
+          <StatusFilter
+            activeStatus={statusFilter}
+            onStatusChange={setStatusFilter}
+            counts={getStatusCounts()}
+          />
         </div>
 
         {filteredBags.length === 0 ? (

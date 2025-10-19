@@ -9,7 +9,8 @@ import { CustodyTimeline } from "@/components/evidence/CustodyTimeline";
 import { AddCustodyModal } from "@/components/evidence/AddCustodyModal";
 import { PhotoUpload } from "@/components/evidence/PhotoUpload";
 import { PhotoGallery } from "@/components/evidence/PhotoGallery";
-import { ArrowLeft, Plus, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Upload, RefreshCw } from "lucide-react";
+import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
 import { toast } from "sonner";
 import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ export default function BagDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddCustody, setShowAddCustody] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showUpdateStatus, setShowUpdateStatus] = useState(false);
   const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
@@ -129,7 +131,17 @@ export default function BagDetail() {
               <h1 className="text-3xl font-bold text-foreground">{bag.bag_id}</h1>
               <p className="text-muted-foreground">Evidence Bag Details</p>
             </div>
-            <StatusBadge status={bag.current_status} />
+            <div className="flex gap-2 items-center">
+              <StatusBadge status={bag.current_status} />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowUpdateStatus(true)}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Update Status
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -208,6 +220,14 @@ export default function BagDetail() {
         open={showAddCustody}
         onOpenChange={setShowAddCustody}
         bagId={bag.id}
+        onSuccess={loadBagData}
+      />
+
+      <UpdateStatusModal
+        open={showUpdateStatus}
+        onOpenChange={setShowUpdateStatus}
+        bagId={bag.id}
+        currentStatus={bag.current_status}
         onSuccess={loadBagData}
       />
     </div>
