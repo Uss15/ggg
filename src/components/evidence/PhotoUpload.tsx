@@ -19,13 +19,14 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
   const validateFile = (file: File): string | null => {
-    // Validate file type
-    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
-      return `${file.name}: Only JPG, PNG, and WEBP images are allowed`;
+    // Validate file type - images and videos
+    if (!file.type.match(/^(image\/(jpeg|png|webp)|video\/(mp4|mov|avi|webm))$/)) {
+      return `${file.name}: Only JPG, PNG, WEBP images and MP4, MOV, AVI, WEBM videos are allowed`;
     }
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      return `${file.name}: File size must be less than 10MB`;
+    // Validate file size (50MB limit for videos, 10MB for images)
+    const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return `${file.name}: File size must be less than ${file.type.startsWith('video/') ? '50MB' : '10MB'}`;
     }
     return null;
   };
@@ -112,15 +113,15 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Upload Evidence Photos</CardTitle>
+        <CardTitle className="text-lg">Upload Evidence Photos & Videos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="photo-upload">Select Photos (Max 10, JPG/PNG/WEBP, 10MB each)</Label>
+          <Label htmlFor="photo-upload">Select Photos & Videos (Max 10, Images: JPG/PNG/WEBP 10MB, Videos: MP4/MOV/AVI/WEBM 50MB)</Label>
           <Input
             id="photo-upload"
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/mov,video/avi,video/webm"
             multiple
             onChange={handleFileSelect}
             disabled={isUploading}
@@ -174,7 +175,7 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
           className="w-full"
         >
           <Upload className="h-4 w-4 mr-2" />
-          {isUploading ? "Uploading..." : `Upload ${selectedFiles.length} Photo(s)`}
+          {isUploading ? "Uploading..." : `Upload ${selectedFiles.length} File(s)`}
         </Button>
       </CardContent>
     </Card>

@@ -4,10 +4,12 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, QrCode } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, QrCode, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { getEvidenceBag } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
+import { QRScanner } from "@/components/QRScanner";
 import { z } from "zod";
 
 const bagIdSchema = z.string().regex(/^BAG-\d{4}-\d{4}$/, "Invalid bag ID format");
@@ -64,6 +66,25 @@ export default function ScanQR() {
     }
   };
 
+  const handleQRScan = async (scannedBagId: string) => {
+    setIsLoading(true);
+    try {
+      const bag = await getEvidenceBag(scannedBagId);
+      if (bag) {
+        navigate(`/bag/${bag.bag_id}`);
+      } else {
+        toast.error("Evidence bag not found");
+      }
+    } catch (error: any) {
+      if (import.meta.env.DEV) {
+        console.error("Error finding bag:", error);
+      }
+      toast.error("Failed to find evidence bag");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header userName={userName} />
@@ -72,35 +93,50 @@ export default function ScanQR() {
           <div className="text-center space-y-2">
             <QrCode className="h-16 w-16 mx-auto text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Scan QR Code</h1>
-            <p className="text-muted-foreground">Enter the Bag ID to access evidence details</p>
+            <p className="text-muted-foreground">Scan or enter the Bag ID to access evidence details</p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Find Evidence Bag</CardTitle>
-              <CardDescription>Enter the Bag ID from the QR code sticker</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSearch} className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="BAG-2025-0001"
-                    value={bagId}
-                    onChange={(e) => setBagId(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button type="submit" disabled={isLoading}>
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="camera" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="camera">
+                <Camera className="h-4 w-4 mr-2" />
+                Camera Scan
+              </TabsTrigger>
+              <TabsTrigger value="manual">
+                <Search className="h-4 w-4 mr-2" />
+                Manual Entry
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Camera-based QR scanning coming soon</p>
-          </div>
+            <TabsContent value="camera" className="mt-4">
+              <QRScanner onScan={handleQRScan} />
+            </TabsContent>
+
+            <TabsContent value="manual" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Find Evidence Bag</CardTitle>
+                  <CardDescription>Enter the Bag ID from the QR code sticker</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSearch} className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="BAG-2025-0001"
+                        value={bagId}
+                        onChange={(e) => setBagId(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button type="submit" disabled={isLoading}>
+                        <Search className="h-4 w-4 mr-2" />
+                        Search
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

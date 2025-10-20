@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { QRCodeDisplay } from "@/components/QRCodeDisplay";
+import { PhotoUpload } from "@/components/evidence/PhotoUpload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateBagId, createEvidenceBag, addChainOfCustodyEntry } from "@/lib/supabase";
@@ -30,6 +31,7 @@ export default function CreateBag() {
   const [isLoading, setIsLoading] = useState(false);
   const [createdBag, setCreatedBag] = useState<{ bag_id: string; id: string } | null>(null);
   const [userName, setUserName] = useState<string>();
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagSchema),
@@ -93,6 +95,7 @@ export default function CreateBag() {
       });
 
       setCreatedBag({ bag_id: bagId, id: bag.id });
+      setShowPhotoUpload(true);
       toast.success("Evidence bag created successfully");
     } catch (error: any) {
       if (import.meta.env.DEV) {
@@ -136,6 +139,15 @@ export default function CreateBag() {
             </Card>
 
             <QRCodeDisplay bagId={createdBag.bag_id} url={`${window.location.origin}/bag/${createdBag.bag_id}`} />
+            
+            {showPhotoUpload && (
+              <PhotoUpload
+                bagId={createdBag.id}
+                onUploadComplete={() => {
+                  toast.success("Files uploaded successfully");
+                }}
+              />
+            )}
           </div>
         </main>
       </div>
