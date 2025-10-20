@@ -25,6 +25,8 @@ export interface EvidenceBag {
   notes?: string;
   current_status: EvidenceStatus;
   qr_data?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +39,8 @@ export interface ChainOfCustodyLog {
   timestamp: string;
   location: string;
   notes?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
 }
 

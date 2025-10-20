@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
+import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
 import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, QrCode, Search, Package } from "lucide-react";
+import { Plus, QrCode, Search, Package, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -21,6 +23,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<EvidenceStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -78,6 +84,19 @@ export default function Dashboard() {
       filtered = filtered.filter((bag) => bag.current_status === statusFilter);
     }
 
+    // Apply type filter
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((bag) => bag.type === typeFilter);
+    }
+
+    // Apply date range filter
+    if (dateFrom) {
+      filtered = filtered.filter((bag) => new Date(bag.date_collected) >= new Date(dateFrom));
+    }
+    if (dateTo) {
+      filtered = filtered.filter((bag) => new Date(bag.date_collected) <= new Date(dateTo + "T23:59:59"));
+    }
+
     // Apply search filter
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
@@ -91,7 +110,7 @@ export default function Dashboard() {
     }
 
     setFilteredBags(filtered);
-  }, [searchQuery, statusFilter, bags]);
+  }, [searchQuery, statusFilter, typeFilter, dateFrom, dateTo, bags]);
 
   const getStatusCounts = () => {
     const counts: Record<EvidenceStatus | "all", number> = {
@@ -152,14 +171,43 @@ export default function Dashboard() {
 
           <DashboardStats bags={bags} />
 
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by ID, description, location, or type..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ID, description, location, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Collapsible open={showAdvancedFilters}>
+              <CollapsibleContent>
+                <AdvancedFilters
+                  selectedType={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  dateFrom={dateFrom}
+                  onDateFromChange={setDateFrom}
+                  dateTo={dateTo}
+                  onDateToChange={setDateTo}
+                  onClearFilters={() => {
+                    setTypeFilter("all");
+                    setDateFrom("");
+                    setDateTo("");
+                  }}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           <StatusFilter

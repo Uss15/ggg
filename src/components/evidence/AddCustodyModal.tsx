@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LocationCapture } from "@/components/LocationCapture";
 import { toast } from "sonner";
 import { addChainOfCustodyEntry, updateEvidenceBagStatus } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ const actionToStatus: Record<ActionType, EvidenceStatus> = {
 
 export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCustodyModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const form = useForm<CustodyFormData>({
     resolver: zodResolver(custodySchema),
@@ -67,6 +69,8 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
         timestamp: new Date().toISOString(),
         location: data.location,
         notes: data.notes || null,
+        latitude: gpsCoordinates?.latitude || null,
+        longitude: gpsCoordinates?.longitude || null,
       });
 
       // Update bag status
@@ -151,6 +155,10 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            <LocationCapture
+              onLocationCapture={(lat, lng) => setGpsCoordinates({ latitude: lat, longitude: lng })}
             />
 
             <div className="flex gap-3 justify-end">

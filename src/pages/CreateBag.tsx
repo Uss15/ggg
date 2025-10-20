@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { PhotoUpload } from "@/components/evidence/PhotoUpload";
+import { LocationCapture } from "@/components/LocationCapture";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateBagId, createEvidenceBag, addChainOfCustodyEntry } from "@/lib/supabase";
@@ -32,6 +33,7 @@ export default function CreateBag() {
   const [createdBag, setCreatedBag] = useState<{ bag_id: string; id: string } | null>(null);
   const [userName, setUserName] = useState<string>();
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagSchema),
@@ -82,6 +84,8 @@ export default function CreateBag() {
         notes: data.notes || null,
         current_status: "collected",
         qr_data: qrUrl,
+        latitude: gpsCoordinates?.latitude || null,
+        longitude: gpsCoordinates?.longitude || null,
       });
 
       // Add initial chain of custody entry
@@ -92,6 +96,8 @@ export default function CreateBag() {
         timestamp: new Date().toISOString(),
         location: data.location,
         notes: `Evidence bag created and collected at ${data.location}`,
+        latitude: gpsCoordinates?.latitude || null,
+        longitude: gpsCoordinates?.longitude || null,
       });
 
       setCreatedBag({ bag_id: bagId, id: bag.id });
@@ -240,6 +246,11 @@ export default function CreateBag() {
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+
+              <LocationCapture
+                onLocationCapture={(lat, lng) => setGpsCoordinates({ latitude: lat, longitude: lng })}
+                autoCapture={true}
               />
 
               <Button type="submit" disabled={isLoading} className="w-full">

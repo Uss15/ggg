@@ -20,7 +20,9 @@ export type Database = {
           bag_id: string
           created_at: string
           id: string
+          latitude: number | null
           location: string
+          longitude: number | null
           notes: string | null
           performed_by: string
           timestamp: string
@@ -30,7 +32,9 @@ export type Database = {
           bag_id: string
           created_at?: string
           id?: string
+          latitude?: number | null
           location: string
+          longitude?: number | null
           notes?: string | null
           performed_by: string
           timestamp?: string
@@ -40,7 +44,9 @@ export type Database = {
           bag_id?: string
           created_at?: string
           id?: string
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           notes?: string | null
           performed_by?: string
           timestamp?: string
@@ -64,7 +70,9 @@ export type Database = {
           description: string
           id: string
           initial_collector: string
+          latitude: number | null
           location: string
+          longitude: number | null
           notes: string | null
           qr_data: string | null
           type: Database["public"]["Enums"]["evidence_type"]
@@ -78,7 +86,9 @@ export type Database = {
           description: string
           id?: string
           initial_collector: string
+          latitude?: number | null
           location: string
+          longitude?: number | null
           notes?: string | null
           qr_data?: string | null
           type: Database["public"]["Enums"]["evidence_type"]
@@ -92,7 +102,9 @@ export type Database = {
           description?: string
           id?: string
           initial_collector?: string
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           notes?: string | null
           qr_data?: string | null
           type?: Database["public"]["Enums"]["evidence_type"]
