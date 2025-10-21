@@ -216,24 +216,20 @@ export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: str
   const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
   const filePath = `${bagId}/${fileName}`;
 
-  // Upload file to storage
+  // Upload file to storage (now private bucket)
   const { error: uploadError } = await supabase.storage
     .from('evidence-photos')
     .upload(filePath, file);
 
   if (uploadError) throw uploadError;
 
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('evidence-photos')
-    .getPublicUrl(filePath);
-
-  // Save metadata to database
+  // Store the file path (not URL) since bucket is private
+  // Files will be accessed via signed URLs
   const { data, error } = await supabase
     .from('evidence_photos')
     .insert({
       bag_id: bagId,
-      photo_url: publicUrl,
+      photo_url: filePath, // Store path, not public URL
       uploaded_by: user.id,
       notes: notes || null,
     })
@@ -242,6 +238,15 @@ export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: str
 
   if (error) throw error;
   return data;
+};
+
+export const getSignedPhotoUrl = async (filePath: string): Promise<string> => {
+  const { data, error } = await supabase.storage
+    .from('evidence-photos')
+    .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+  if (error) throw error;
+  return data.signedUrl;
 };
 
 export const getEvidencePhotos = async (bagId: string) => {

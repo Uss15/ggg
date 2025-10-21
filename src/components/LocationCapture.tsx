@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { validateCoordinates } from "@/lib/validation";
+import { logError, sanitizeError } from "@/lib/errors";
 
 interface LocationCaptureProps {
   onLocationCapture: (latitude: number, longitude: number) => void;
@@ -22,14 +24,24 @@ export const LocationCapture = ({ onLocationCapture, autoCapture = false }: Loca
     setIsLoading(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-        onLocationCapture(latitude, longitude);
-        toast.success("Location captured successfully");
-        setIsLoading(false);
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Validate coordinates before using them
+          validateCoordinates({ latitude, longitude });
+          
+          setLocation({ latitude, longitude });
+          onLocationCapture(latitude, longitude);
+          toast.success("Location captured successfully");
+          setIsLoading(false);
+        } catch (error) {
+          logError('LocationCapture', error);
+          toast.error(sanitizeError(error));
+          setIsLoading(false);
+        }
       },
       (error) => {
-        console.error("Geolocation error:", error);
+        logError('LocationCapture', error);
         toast.error("Unable to capture location. Please check permissions.");
         setIsLoading(false);
       },

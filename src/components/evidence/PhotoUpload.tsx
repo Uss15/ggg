@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Upload, X } from "lucide-react";
 import { uploadEvidencePhoto } from "@/lib/supabase";
 import { toast } from "sonner";
+import { validateFileType } from "@/lib/validation";
+import { logError, sanitizeError } from "@/lib/errors";
 
 interface PhotoUploadProps {
   bagId: string;
@@ -19,15 +21,18 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
   const validateFile = (file: File): string | null => {
-    // Validate file type - images and videos
-    if (!file.type.match(/^(image\/(jpeg|png|webp)|video\/(mp4|mov|avi|webm))$/)) {
+    // Validate file type using secure validation
+    if (!validateFileType(file)) {
       return `${file.name}: Only JPG, PNG, WEBP images and MP4, MOV, AVI, WEBM videos are allowed`;
     }
-    // Validate file size (50MB limit for videos, 10MB for images)
-    const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    
+    // Check file size
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      return `${file.name}: File size must be less than ${file.type.startsWith('video/') ? '50MB' : '10MB'}`;
+      return `${file.name}: File size must be less than ${isVideo ? '50MB' : '10MB'}`;
     }
+    
     return null;
   };
 
@@ -84,9 +89,7 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
           successCount++;
         } catch (error) {
           failCount++;
-          if (import.meta.env.DEV) {
-            console.error(`Error uploading ${file.name}:`, error);
-          }
+          logError('PhotoUpload', error);
         }
       }
 
@@ -101,10 +104,8 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
         toast.error(`Failed to upload ${failCount} photo(s)`);
       }
     } catch (error) {
-      toast.error("Upload failed");
-      if (import.meta.env.DEV) {
-        console.error("Error uploading photos:", error);
-      }
+      logError('PhotoUpload', error);
+      toast.error(sanitizeError(error));
     } finally {
       setIsUploading(false);
     }
