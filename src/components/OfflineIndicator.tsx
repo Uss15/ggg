@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export const OfflineIndicator = () => {
-  const { t } = useTranslation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queuedActions, setQueuedActions] = useState<string[]>([]);
 
@@ -50,18 +48,18 @@ export const OfflineIndicator = () => {
     <div className="fixed bottom-4 right-4 z-50 max-w-md">
       <Alert variant={isOnline ? "default" : "destructive"}>
         <WifiOff className="h-4 w-4" />
-        <AlertTitle>{t('offline.title')}</AlertTitle>
+        <AlertTitle>Offline Mode</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>{t('offline.message')}</p>
+          <p>You are currently offline. Changes will sync when connection is restored.</p>
           {queuedActions.length > 0 && (
             <div className="flex items-center gap-2">
               <Badge variant="secondary">
-                {queuedActions.length} {t('offline.queuedActions')}
+                {queuedActions.length} Queued Actions
               </Badge>
               {isOnline && (
                 <Button size="sm" onClick={syncNow}>
                   <RefreshCw className="h-3 w-3 mr-1" />
-                  {t('offline.syncNow')}
+                  Sync Now
                 </Button>
               )}
             </div>

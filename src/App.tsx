@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import "@/i18n/config";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateBag from "./pages/CreateBag";

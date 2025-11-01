@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { SecurityMonitor } from '@/components/admin/SecurityMonitor';
-import { Card } from '@/components/ui/card';
 
 const SecurityDashboard = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,7 +49,7 @@ const SecurityDashboard = () => {
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">{t('security.title', 'Security Monitor')}</h1>
+          <h1 className="text-3xl font-bold">Security Monitor</h1>
           <p className="text-muted-foreground">
             Real-time security monitoring and activity tracking
           </p>

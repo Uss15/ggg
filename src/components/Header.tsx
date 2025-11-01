@@ -8,8 +8,6 @@ import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 import { GlobalSearch } from "./GlobalSearch";
-import { LanguageSwitcher } from "./LanguageSwitcher";
-import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   userName?: string;
@@ -17,7 +15,6 @@ interface HeaderProps {
 
 export const Header = ({ userName }: HeaderProps) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -66,11 +63,11 @@ export const Header = ({ userName }: HeaderProps) => {
             <>
               <Button variant="outline" size="sm" onClick={() => navigate("/analytics")}>
                 <BarChart className="h-4 w-4 mr-2" />
-                {t('admin.analytics')}
+                Analytics
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/security")}>
                 <ShieldCheck className="h-4 w-4 mr-2" />
-                {t('admin.security')}
+                Security
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/disposal-requests")}>
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -78,7 +75,7 @@ export const Header = ({ userName }: HeaderProps) => {
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/audits")}>
                 <Search className="h-4 w-4 mr-2" />
-                {t('admin.audit')}
+                Audits
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
                 <ClipboardList className="h-4 w-4 mr-2" />
@@ -86,7 +83,7 @@ export const Header = ({ userName }: HeaderProps) => {
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
-                {t('admin.title')}
+                Admin
               </Button>
             </>
           )}
@@ -94,7 +91,6 @@ export const Header = ({ userName }: HeaderProps) => {
             <Search className="h-5 w-5" />
           </Button>
           <NotificationBell />
-          <LanguageSwitcher />
           <ThemeToggle />
           {userName && (
             <span className="text-sm text-muted-foreground">
