@@ -15,7 +15,7 @@ import { LocationCapture } from "@/components/LocationCapture";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateBagId, createEvidenceBag, addChainOfCustodyEntry } from "@/lib/supabase";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Upload, X, Image, Video } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const bagSchema = z.object({
@@ -34,6 +34,9 @@ export default function CreateBag() {
   const [userName, setUserName] = useState<string>();
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<File[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagSchema),
@@ -101,6 +104,43 @@ export default function CreateBag() {
       });
 
       setCreatedBag({ bag_id: bagId, id: bag.id });
+      
+      // Upload photos and videos if any were selected
+      if (selectedPhotos.length > 0 || selectedVideos.length > 0) {
+        setUploadingMedia(true);
+        try {
+          const allFiles = [...selectedPhotos, ...selectedVideos];
+          for (const file of allFiles) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${bag.id}/${fileName}`;
+
+            // Upload to storage
+            const { error: uploadError } = await supabase.storage
+              .from('evidence-photos')
+              .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Save metadata to database
+            await supabase
+              .from('evidence_photos')
+              .insert({
+                bag_id: bag.id,
+                photo_url: filePath,
+                uploaded_by: user.id,
+                notes: `${file.type.startsWith('video') ? 'Video' : 'Photo'} uploaded during evidence creation`,
+              });
+          }
+          toast.success(`Uploaded ${allFiles.length} file(s) successfully`);
+        } catch (error: any) {
+          console.error("Error uploading media:", error);
+          toast.error("Evidence bag created but some files failed to upload");
+        } finally {
+          setUploadingMedia(false);
+        }
+      }
+      
       setShowPhotoUpload(true);
       toast.success("Evidence bag created successfully");
     } catch (error: any) {
@@ -253,9 +293,103 @@ export default function CreateBag() {
                 autoCapture={true}
               />
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Evidence Bag
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Photos & Videos</CardTitle>
+                  <CardDescription>Upload photos and videos of the evidence (optional)</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Photo Upload */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      <FormLabel>Photos (JPG, PNG, WEBP)</FormLabel>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setSelectedPhotos(prev => [...prev, ...files]);
+                        }}
+                        className="cursor-pointer"
+                      />
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    {selectedPhotos.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedPhotos.map((file, idx) => (
+                          <div key={idx} className="relative group">
+                            <div className="flex items-center gap-1 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md text-sm">
+                              <Image className="h-3 w-3" />
+                              <span className="max-w-[100px] truncate">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPhotos(prev => prev.filter((_, i) => i !== idx))}
+                                className="ml-1 hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Video Upload */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Video className="h-4 w-4" />
+                      <FormLabel>Videos (MP4, MOV, AVI)</FormLabel>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept="video/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setSelectedVideos(prev => [...prev, ...files]);
+                        }}
+                        className="cursor-pointer"
+                      />
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    {selectedVideos.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedVideos.map((file, idx) => (
+                          <div key={idx} className="relative group">
+                            <div className="flex items-center gap-1 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md text-sm">
+                              <Video className="h-3 w-3" />
+                              <span className="max-w-[100px] truncate">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedVideos(prev => prev.filter((_, i) => i !== idx))}
+                                className="ml-1 hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {(selectedPhotos.length > 0 || selectedVideos.length > 0) && (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedPhotos.length + selectedVideos.length} file(s) selected
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Button type="submit" disabled={isLoading || uploadingMedia} className="w-full">
+                {(isLoading || uploadingMedia) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {uploadingMedia ? "Uploading Media..." : "Create Evidence Bag"}
               </Button>
             </form>
           </Form>
