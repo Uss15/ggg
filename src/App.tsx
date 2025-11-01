@@ -17,6 +17,7 @@ import CaseDetail from "@/pages/CaseDetail";
 import DisposalRequests from "@/pages/DisposalRequests";
 import Audits from "@/pages/Audits";
 import AuditLog from "@/pages/AuditLog";
+import Analytics from "@/pages/Analytics";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
 
@@ -93,6 +94,10 @@ const App = () => {
             <Route
               path="/audit-log"
               element={session ? <AuditLog /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/analytics"
+              element={session ? <Analytics /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
