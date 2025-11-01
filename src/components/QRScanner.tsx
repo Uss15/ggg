@@ -24,12 +24,31 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
-        setIsScanning(true);
-        startScanning();
+        
+        // Explicitly play the video
+        try {
+          await videoRef.current.play();
+          setIsScanning(true);
+          startScanning();
+          toast.success("Camera started successfully");
+        } catch (playError) {
+          console.error("Video play error:", playError);
+          toast.error("Failed to start camera preview");
+          // Clean up the stream if play fails
+          mediaStream.getTracks().forEach(track => track.stop());
+        }
       }
-    } catch (error) {
-      toast.error("Unable to access camera. Please check permissions.");
+    } catch (error: any) {
       console.error("Camera access error:", error);
+      
+      // Provide specific error messages
+      if (error.name === 'NotAllowedError') {
+        toast.error("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (error.name === 'NotFoundError') {
+        toast.error("No camera found on this device.");
+      } else {
+        toast.error("Unable to access camera. Please check permissions.");
+      }
     }
   };
 
