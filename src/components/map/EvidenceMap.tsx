@@ -27,7 +27,8 @@ export const EvidenceMap = ({ locations, onMarkerClick }: EvidenceMapProps) => {
   useEffect(() => {
     if (!mapRef.current || locations.length === 0) return;
 
-    const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    // Mapbox public token (safe to expose in client-side code)
+    const MAPBOX_TOKEN = "pk.eyJ1IjoiYmVhdXR5aW5jaGFvcyIsImEiOiJjbWhnbmsyb20wZmFwMmpzN3JpZWFvaTlxIn0.FCBbBQAhdYI3_B-p9VLXAA";
     
     if (!MAPBOX_TOKEN) {
       setMapError("Mapbox token not configured. Please add MAPBOX_PUBLIC_TOKEN to project settings.");
