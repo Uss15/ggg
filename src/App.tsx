@@ -18,7 +18,6 @@ import CreateCase from "@/pages/CreateCase";
 import CaseDetail from "@/pages/CaseDetail";
 import DisposalRequests from "@/pages/DisposalRequests";
 import Audits from "@/pages/Audits";
-import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
 import Profile from "@/pages/Profile";
@@ -26,7 +25,6 @@ import Settings from "@/pages/Settings";
 import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const queryClient = new QueryClient();
 
@@ -101,10 +99,6 @@ const App = () => {
               element={session ? <Audits /> : <Navigate to="/" replace />}
             />
             <Route
-              path="/audit-log"
-              element={session ? <AuditLog /> : <Navigate to="/" replace />}
-            />
-            <Route
               path="/analytics"
               element={session ? <Analytics /> : <Navigate to="/" replace />}
             />
@@ -126,7 +120,6 @@ const App = () => {
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <OfflineIndicator />
         </BrowserRouter>
       </TooltipProvider>
       </QueryClientProvider>
