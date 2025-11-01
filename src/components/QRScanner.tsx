@@ -13,10 +13,19 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [initializing, setInitializing] = useState(false);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const fallbackWarnedRef = useRef(false);
 
   const startCamera = async () => {
+    setInitializing(true);
+
+    if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
+      toast.error('Camera API not available in this browser or context. Try Chrome or open in a new tab.');
+      setInitializing(false);
+      return;
+    }
+
     const tryStart = async (mode: 'environment' | 'user') => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: mode } },
@@ -29,13 +38,13 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
         videoRef.current.setAttribute('muted', 'true');
         videoRef.current.setAttribute('playsinline', 'true');
         setStream(mediaStream);
+        setIsScanning(true); // show video element immediately
         await new Promise<void>((resolve) => {
           if (!videoRef.current) return resolve();
           videoRef.current.onloadedmetadata = () => resolve();
           if (videoRef.current.readyState >= 1) resolve();
         });
         await videoRef.current.play();
-        setIsScanning(true);
         startScanning();
         toast.success('Camera started');
       }
@@ -49,16 +58,21 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
         await tryStart('user');
       } catch (error: any) {
         console.error('Camera access error:', error);
+        setIsScanning(false);
         if (error.name === 'NotAllowedError') {
           toast.error('Camera permission denied. Allow access in browser settings.');
         } else if (error.name === 'NotFoundError' || error.message?.includes('Requested device not found')) {
           toast.error('No camera found on this device.');
         } else if (location.protocol !== 'https:') {
           toast.error('Camera requires HTTPS. Please use a secure connection.');
+        } else if (window.top !== window.self) {
+          toast.error('Camera may be blocked inside an embedded view. Use the button below to open in a new tab.');
         } else {
           toast.error('Unable to access camera. Please check permissions.');
         }
       }
+    } finally {
+      setInitializing(false);
     }
   };
 
@@ -155,6 +169,11 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
               />
               <canvas ref={canvasRef} className="hidden" />
               <div className="absolute inset-0 border-2 border-primary m-12 rounded-lg pointer-events-none" />
+              {initializing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/40">
+                  <span className="text-sm">Initializing camera…</span>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -184,6 +203,20 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
         <p className="text-xs text-muted-foreground text-center">
           Position the QR code within the frame to scan
         </p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground text-center">
+            If the camera doesn’t start here (embedded view), open the scanner in a new tab.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={isScanning || initializing}
+            onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
+          >
+            Open Scanner in New Tab
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
