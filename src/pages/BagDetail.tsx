@@ -71,8 +71,8 @@ export default function BagDetail() {
       }
 
       const [custodyData, photosData, casesData] = await Promise.all([
-        getChainOfCustody(bagId),
-        getEvidencePhotos(bagId),
+        getChainOfCustody(bagData.id),
+        getEvidencePhotos(bagData.id),
         getEvidenceCases(bagData.id),
       ]);
 
