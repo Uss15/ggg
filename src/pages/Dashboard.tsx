@@ -13,7 +13,7 @@ import { EvidenceMap } from "@/components/map/EvidenceMap";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
 import { exportToCSV } from "@/lib/csv-export";
 import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, QrCode, Search, Package, SlidersHorizontal, Download, Map } from "lucide-react";
+import { Plus, Search, Package, SlidersHorizontal, Download, Map } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -183,10 +183,6 @@ export default function Dashboard() {
               <Button onClick={handleExportCSV} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
-              </Button>
-              <Button onClick={() => navigate("/scan")} variant="outline">
-                <QrCode className="h-4 w-4 mr-2" />
-                Scan QR
               </Button>
               <Button onClick={() => navigate("/create")}>
                 <Plus className="h-4 w-4 mr-2" />
