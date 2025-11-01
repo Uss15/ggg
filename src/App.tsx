@@ -18,8 +18,10 @@ import DisposalRequests from "@/pages/DisposalRequests";
 import Audits from "@/pages/Audits";
 import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
+import SecurityDashboard from "@/pages/SecurityDashboard";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const queryClient = new QueryClient();
 
@@ -99,8 +101,13 @@ const App = () => {
               path="/analytics"
               element={session ? <Analytics /> : <Navigate to="/" replace />}
             />
+            <Route
+              path="/security"
+              element={session ? <SecurityDashboard /> : <Navigate to="/" replace />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <OfflineIndicator />
         </BrowserRouter>
       </TooltipProvider>
       </ThemeProvider>

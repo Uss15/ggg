@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "SFEP Evidence Tracking",
+    "subtitle": "Secure Forensic Evidence Platform"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "badgeNumber": "Badge Number",
+    "rememberMe": "Remember me"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": "Statistics",
+    "recentActivity": "Recent Activity",
+    "newBag": "New Evidence Bag"
+  },
+  "evidence": {
+    "create": "Create Evidence",
+    "view": "View Evidence",
+    "edit": "Edit Evidence",
+    "delete": "Delete Evidence",
+    "bagId": "Bag ID",
+    "type": "Type",
+    "status": "Status",
+    "location": "Location",
+    "description": "Description",
+    "collector": "Collector",
+    "dateCollected": "Date Collected"
+  },
+  "cases": {
+    "title": "Cases",
+    "create": "Create Case",
+    "view": "View Case",
+    "caseNumber": "Case Number",
+    "offenseType": "Offense Type",
+    "leadOfficer": "Lead Officer",
+    "closed": "Closed",
+    "open": "Open"
+  },
+  "custody": {
+    "chain": "Chain of Custody",
+    "addEntry": "Add Custody Entry",
+    "action": "Action",
+    "performedBy": "Performed By",
+    "timestamp": "Timestamp",
+    "signature": "Signature"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "users": "Users",
+    "roles": "Roles",
+    "audit": "Audit Log",
+    "security": "Security Monitor",
+    "analytics": "Analytics"
+  },
+  "security": {
+    "activeSessions": "Active Sessions",
+    "recentLogins": "Recent Logins",
+    "failedAttempts": "Failed Attempts",
+    "suspiciousActivity": "Suspicious Activity",
+    "ipAddress": "IP Address",
+    "lastActivity": "Last Activity"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next"
+  },
+  "offline": {
+    "title": "Offline Mode",
+    "message": "You are currently offline. Changes will sync when connection is restored.",
+    "queuedActions": "Queued Actions",
+    "syncNow": "Sync Now"
+  }
+}

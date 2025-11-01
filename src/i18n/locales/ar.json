@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "نظام تتبع الأدلة الجنائية",
+    "subtitle": "منصة الأدلة الجنائية الآمنة"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "signup": "التسجيل",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "fullName": "الاسم الكامل",
+    "badgeNumber": "رقم الشارة",
+    "rememberMe": "تذكرني"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "stats": "الإحصائيات",
+    "recentActivity": "النشاط الأخير",
+    "newBag": "حقيبة أدلة جديدة"
+  },
+  "evidence": {
+    "create": "إنشاء دليل",
+    "view": "عرض الدليل",
+    "edit": "تحرير الدليل",
+    "delete": "حذف الدليل",
+    "bagId": "رقم الحقيبة",
+    "type": "النوع",
+    "status": "الحالة",
+    "location": "الموقع",
+    "description": "الوصف",
+    "collector": "جامع الأدلة",
+    "dateCollected": "تاريخ الجمع"
+  },
+  "cases": {
+    "title": "القضايا",
+    "create": "إنشاء قضية",
+    "view": "عرض القضية",
+    "caseNumber": "رقم القضية",
+    "offenseType": "نوع الجريمة",
+    "leadOfficer": "الضابط المسؤول",
+    "closed": "مغلقة",
+    "open": "مفتوحة"
+  },
+  "custody": {
+    "chain": "سلسلة الحفظ",
+    "addEntry": "إضافة إدخال حفظ",
+    "action": "الإجراء",
+    "performedBy": "نفذه",
+    "timestamp": "الطابع الزمني",
+    "signature": "التوقيع"
+  },
+  "admin": {
+    "title": "لوحة الإدارة",
+    "users": "المستخدمون",
+    "roles": "الأدوار",
+    "audit": "سجل التدقيق",
+    "security": "مراقبة الأمان",
+    "analytics": "التحليلات"
+  },
+  "security": {
+    "activeSessions": "الجلسات النشطة",
+    "recentLogins": "تسجيلات الدخول الأخيرة",
+    "failedAttempts": "محاولات فاشلة",
+    "suspiciousActivity": "نشاط مشبوه",
+    "ipAddress": "عنوان IP",
+    "lastActivity": "آخر نشاط"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تحرير",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "import": "استيراد",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي"
+  },
+  "offline": {
+    "title": "وضع عدم الاتصال",
+    "message": "أنت غير متصل حالياً. سيتم مزامنة التغييرات عند استعادة الاتصال.",
+    "queuedActions": "الإجراءات في قائمة الانتظار",
+    "syncNow": "مزامنة الآن"
+  }
+}

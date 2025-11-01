@@ -1,4 +1,4 @@
-import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, ClipboardList, BarChart } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, ClipboardList, BarChart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 import { GlobalSearch } from "./GlobalSearch";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   userName?: string;
@@ -15,6 +17,7 @@ interface HeaderProps {
 
 export const Header = ({ userName }: HeaderProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -63,7 +66,11 @@ export const Header = ({ userName }: HeaderProps) => {
             <>
               <Button variant="outline" size="sm" onClick={() => navigate("/analytics")}>
                 <BarChart className="h-4 w-4 mr-2" />
-                Analytics
+                {t('admin.analytics')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/security")}>
+                <ShieldCheck className="h-4 w-4 mr-2" />
+                {t('admin.security')}
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/disposal-requests")}>
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -71,7 +78,7 @@ export const Header = ({ userName }: HeaderProps) => {
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/audits")}>
                 <Search className="h-4 w-4 mr-2" />
-                Audits
+                {t('admin.audit')}
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
                 <ClipboardList className="h-4 w-4 mr-2" />
@@ -79,7 +86,7 @@ export const Header = ({ userName }: HeaderProps) => {
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
-                Admin
+                {t('admin.title')}
               </Button>
             </>
           )}
@@ -87,6 +94,7 @@ export const Header = ({ userName }: HeaderProps) => {
             <Search className="h-5 w-5" />
           </Button>
           <NotificationBell />
+          <LanguageSwitcher />
           <ThemeToggle />
           {userName && (
             <span className="text-sm text-muted-foreground">
