@@ -8,12 +8,17 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
+import { QuickActions } from "@/components/QuickActions";
+import { ActivityFeed } from "@/components/ActivityFeed";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
+import { EvidenceMap } from "@/components/map/EvidenceMap";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
+import { exportToCSV } from "@/lib/csv-export";
 import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, QrCode, Search, Package, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, Package, SlidersHorizontal, Download, Map } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -129,6 +134,25 @@ export default function Dashboard() {
     return counts;
   };
 
+  const handleExportCSV = () => {
+    try {
+      const exportData = filteredBags.map(bag => ({
+        bag_id: bag.bag_id,
+        type: bag.type,
+        description: bag.description,
+        status: bag.current_status,
+        location: bag.location,
+        date_collected: new Date(bag.date_collected).toLocaleString(),
+        notes: bag.notes || '',
+      }));
+      
+      exportToCSV(exportData, `evidence-bags-${new Date().toISOString().split('T')[0]}.csv`);
+      toast.success("Evidence data exported to CSV");
+    } catch (error) {
+      toast.error("Failed to export data");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -158,9 +182,9 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Manage and track all evidence bags</p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => navigate("/scan")} variant="outline">
-                <QrCode className="h-4 w-4 mr-2" />
-                Scan QR
+              <Button onClick={handleExportCSV} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
               </Button>
               <Button onClick={() => navigate("/create")}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -170,6 +194,10 @@ export default function Dashboard() {
           </div>
 
           <DashboardStats bags={bags} />
+          
+          <QuickActions />
+          
+          <ActivityFeed />
 
           <div className="space-y-3">
             <div className="flex gap-2">
@@ -217,7 +245,20 @@ export default function Dashboard() {
           />
         </div>
 
-        {filteredBags.length === 0 ? (
+        <Tabs defaultValue="list" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="list">
+              <Package className="h-4 w-4 mr-2" />
+              List View
+            </TabsTrigger>
+            <TabsTrigger value="map">
+              <Map className="h-4 w-4 mr-2" />
+              Map View
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="list">
+            {filteredBags.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -263,7 +304,27 @@ export default function Dashboard() {
               </Card>
             ))}
           </div>
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="map">
+            <EvidenceMap
+              locations={filteredBags
+                .filter(bag => bag.latitude && bag.longitude)
+                .map(bag => ({
+                  id: bag.id,
+                  bag_id: bag.bag_id,
+                  latitude: bag.latitude!,
+                  longitude: bag.longitude!,
+                  description: bag.description,
+                  status: bag.current_status,
+                }))}
+              onMarkerClick={(location) => {
+                navigate(`/bag/${location.bag_id}`);
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

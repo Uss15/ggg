@@ -3,9 +3,27 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 const resend = {
   emails: {
     send: async (params: any) => {
-      // Placeholder - will be replaced when RESEND_API_KEY is configured
-      console.log("Email would be sent:", params);
-      return { id: "mock-email-id" };
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      
+      if (!RESEND_API_KEY) {
+        throw new Error("RESEND_API_KEY is not configured");
+      }
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Resend API error: ${error}`);
+      }
+
+      return response.json();
     }
   }
 };
