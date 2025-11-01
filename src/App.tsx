@@ -11,6 +11,8 @@ import CreateBag from "./pages/CreateBag";
 import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import Cases from "./pages/Cases";
+import CreateCase from "./pages/CreateCase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,14 @@ const App = () => {
             <Route
               path="/admin"
               element={session ? <AdminDashboard /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/cases"
+              element={session ? <Cases /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/cases/create"
+              element={session ? <CreateCase /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

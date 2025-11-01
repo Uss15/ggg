@@ -1,10 +1,11 @@
-import { Shield, LogOut, Settings } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { hasRole } from "@/lib/supabase";
+import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   userName?: string;
@@ -47,16 +48,29 @@ export const Header = ({ userName }: HeaderProps) => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {userName && (
-            <span className="text-sm text-muted-foreground">
-              Welcome, <span className="font-medium text-foreground">{userName}</span>
-            </span>
-          )}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <Package className="h-4 w-4 mr-2" />
+            Evidence
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/cases")}>
+            <FolderOpen className="h-4 w-4 mr-2" />
+            Cases
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/scan")}>
+            <QrCode className="h-4 w-4 mr-2" />
+            Scan
+          </Button>
           {isAdmin && (
             <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
               <Settings className="h-4 w-4 mr-2" />
               Admin
             </Button>
+          )}
+          <NotificationBell />
+          {userName && (
+            <span className="text-sm text-muted-foreground">
+              {userName}
+            </span>
           )}
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
