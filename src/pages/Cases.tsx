@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FolderOpen, Download } from "lucide-react";
+import { Plus, Search, FolderOpen } from "lucide-react";
 import { getAllCases, type Case } from "@/lib/supabase-enhanced";
-import { exportToCSV } from "@/lib/csv-export";
 import { toast } from "sonner";
 import { logError, sanitizeError } from "@/lib/errors";
 
@@ -70,25 +69,6 @@ export default function Cases() {
     setFilteredCases(filtered);
   };
 
-  const handleExportCSV = () => {
-    try {
-      const exportData = filteredCases.map(caseItem => ({
-        case_number: caseItem.case_number,
-        offense_type: caseItem.offense_type,
-        status: caseItem.status,
-        location: caseItem.location,
-        office: caseItem.offices?.name || '',
-        lead_officer: caseItem.profiles?.full_name || '',
-        created_at: new Date(caseItem.created_at).toLocaleString(),
-      }));
-      
-      exportToCSV(exportData, `cases-${new Date().toISOString().split('T')[0]}.csv`);
-      toast.success("Cases data exported to CSV");
-    } catch (error) {
-      toast.error("Failed to export data");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -100,16 +80,10 @@ export default function Cases() {
               Manage investigation cases and link evidence
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleExportCSV} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button onClick={() => navigate("/cases/create")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Case
-            </Button>
-          </div>
+          <Button onClick={() => navigate("/cases/create")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Case
+          </Button>
         </div>
 
         <Card className="mb-6">

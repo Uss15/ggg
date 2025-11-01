@@ -9,8 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocationCapture } from "@/components/LocationCapture";
-import { DigitalSignature } from "@/components/evidence/DigitalSignature";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { addChainOfCustodyEntry, updateEvidenceBagStatus } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,8 +42,6 @@ const actionToStatus: Record<ActionType, EvidenceStatus> = {
 export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCustodyModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [requireSignature, setRequireSignature] = useState(false);
-  const [digitalSignature, setDigitalSignature] = useState<string | null>(null);
 
   const form = useForm<CustodyFormData>({
     resolver: zodResolver(custodySchema),
@@ -57,11 +53,6 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
   });
 
   const onSubmit = async (data: CustodyFormData) => {
-    if (requireSignature && !digitalSignature) {
-      toast.error("Digital signature is required");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +61,7 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
         return;
       }
 
-      // Add custody entry with digital signature
+      // Add custody entry
       await addChainOfCustodyEntry({
         bag_id: bagId,
         action: data.action,
@@ -80,43 +71,14 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
         notes: data.notes || null,
         latitude: gpsCoordinates?.latitude || null,
         longitude: gpsCoordinates?.longitude || null,
-        digital_signature: digitalSignature,
-        signature_timestamp: digitalSignature ? new Date().toISOString() : null,
       });
 
       // Update bag status
       const newStatus = actionToStatus[data.action];
       await updateEvidenceBagStatus(bagId, newStatus);
 
-      // Send email notification if configured
-      try {
-        const { data: bagData } = await supabase
-          .from('evidence_bags')
-          .select('bag_id, initial_collector, profiles:initial_collector(full_name)')
-          .eq('id', bagId)
-          .single();
-
-        if (bagData) {
-          await supabase.functions.invoke('send-notification-email', {
-            body: {
-              to: 'evidence-team@sfep.gov', // In production, get from user profile
-              subject: `Evidence Custody Update - ${bagData.bag_id}`,
-              title: 'Chain of Custody Update',
-              message: `Evidence bag ${bagData.bag_id} custody action: ${data.action} at ${data.location}. ${digitalSignature ? 'Digitally signed.' : ''}`,
-              actionUrl: `${window.location.origin}/bag/${bagId}`,
-              actionText: 'View Evidence Details'
-            }
-          });
-        }
-      } catch (emailError) {
-        // Don't fail the custody entry if email fails
-        console.error('Email notification failed:', emailError);
-      }
-
-      toast.success("Chain of custody entry added with digital signature");
+      toast.success("Chain of custody entry added");
       form.reset();
-      setDigitalSignature(null);
-      setRequireSignature(false);
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -198,31 +160,6 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
             <LocationCapture
               onLocationCapture={(lat, lng) => setGpsCoordinates({ latitude: lat, longitude: lng })}
             />
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requireSignature"
-                checked={requireSignature}
-                onCheckedChange={(checked) => setRequireSignature(checked as boolean)}
-              />
-              <label
-                htmlFor="requireSignature"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Require digital signature
-              </label>
-            </div>
-
-            {requireSignature && (
-              <DigitalSignature
-                title="Officer Signature"
-                onSign={(sig) => {
-                  setDigitalSignature(sig);
-                  toast.success("Signature captured");
-                }}
-                onClear={() => setDigitalSignature(null)}
-              />
-            )}
 
             <div className="flex gap-3 justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

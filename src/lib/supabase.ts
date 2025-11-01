@@ -41,8 +41,6 @@ export interface ChainOfCustodyLog {
   notes?: string;
   latitude?: number | null;
   longitude?: number | null;
-  digital_signature?: string | null;
-  signature_timestamp?: string | null;
   created_at: string;
 }
 

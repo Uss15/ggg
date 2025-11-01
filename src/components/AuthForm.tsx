@@ -5,35 +5,68 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield } from "lucide-react";
 import { z } from "zod";
 
-// Input validation schema for login
+// Input validation schemas
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255),
   password: z.string().min(1, "Password required"),
 });
 
+const signupSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100),
+  fullName: z.string().trim().min(2, "Name too short").max(100, "Name too long"),
+  badgeNumber: z.string().trim().max(50).optional(),
+});
+
 export const AuthForm = () => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [badgeNumber, setBadgeNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate login inputs
-      const validatedData = loginSchema.parse({ email, password });
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email: validatedData.email,
-        password: validatedData.password,
-      });
-      
-      if (error) throw error;
-      toast.success("Signed in successfully");
+      if (isLogin) {
+        // Validate login inputs
+        const validatedData = loginSchema.parse({ email, password });
+        
+        const { error } = await supabase.auth.signInWithPassword({
+          email: validatedData.email,
+          password: validatedData.password,
+        });
+        if (error) throw error;
+        toast.success("Signed in successfully");
+      } else {
+        // Validate signup inputs
+        const validatedData = signupSchema.parse({
+          email,
+          password,
+          fullName,
+          badgeNumber: badgeNumber || undefined,
+        });
+        
+        const { error } = await supabase.auth.signUp({
+          email: validatedData.email,
+          password: validatedData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: {
+              full_name: validatedData.fullName,
+              badge_number: validatedData.badgeNumber || null,
+            },
+          },
+        });
+        if (error) throw error;
+        toast.success("Account created successfully");
+      }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
@@ -45,43 +78,45 @@ export const AuthForm = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      toast.error("Please enter your email address first");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/`,
-      });
-
-      if (error) throw error;
-      toast.success("Password reset link sent to your email!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send reset email");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Shield className="h-10 w-10 text-primary" />
-            </div>
+            <Shield className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-3xl font-bold">Secure Evidence Platform</CardTitle>
-          <CardDescription className="text-base">
-            Sign in to access the evidence management system
+          <CardTitle className="text-2xl font-bold">Evidence Tracking</CardTitle>
+          <CardDescription>
+            {isLogin ? "Sign in to your account" : "Create a new account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="badgeNumber">Badge Number (Optional)</Label>
+                  <Input
+                    id="badgeNumber"
+                    type="text"
+                    value={badgeNumber}
+                    onChange={(e) => setBadgeNumber(e.target.value)}
+                    placeholder="BADGE-001"
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -91,7 +126,6 @@ export const AuthForm = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
-                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -103,30 +137,20 @@ export const AuthForm = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center text-sm">
             <button
               type="button"
-              onClick={handleForgotPassword}
-              disabled={loading}
-              className="text-sm text-primary hover:underline disabled:opacity-50"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-primary hover:underline"
             >
-              Forgot your password?
+              {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
             </button>
-          </div>
-
-          <div className="mt-6 p-3 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground text-center">
-              Account registration is restricted. Contact your system administrator for access.
-            </p>
           </div>
         </CardContent>
       </Card>

@@ -5,14 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Link2, Package, MapPin, Calendar, User, FileText, Lock } from "lucide-react";
+import { ArrowLeft, Link2, Package, MapPin, Calendar, User, FileText } from "lucide-react";
 import { getCaseById, getCaseEvidenceBags, unlinkEvidenceFromCase } from "@/lib/supabase-enhanced";
 import { LinkEvidenceModal } from "@/components/case/LinkEvidenceModal";
 import { toast } from "sonner";
 import { logError, sanitizeError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
-import { supabase } from "@/integrations/supabase/client";
-import { hasRole } from "@/lib/supabase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,21 +44,10 @@ export default function CaseDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [unlinkBagId, setUnlinkBagId] = useState<string | null>(null);
-  const [showCloseDialog, setShowCloseDialog] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (caseId) loadCaseData();
-    checkAdmin();
   }, [caseId]);
-
-  const checkAdmin = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const admin = await hasRole(user.id, 'admin');
-      setIsAdmin(admin);
-    }
-  };
 
   const loadCaseData = async () => {
     if (!caseId) return;
@@ -97,37 +84,6 @@ export default function CaseDetail() {
     }
   };
 
-  const handleCloseCase = async () => {
-    if (!caseId) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Not authenticated");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('cases')
-        .update({
-          status: 'closed',
-          is_closed: true,
-          closed_at: new Date().toISOString(),
-          closed_by: user.id,
-        })
-        .eq('id', caseId);
-
-      if (error) throw error;
-
-      toast.success("Case closed successfully. This case is now immutable.");
-      loadCaseData();
-      setShowCloseDialog(false);
-    } catch (error: any) {
-      logError('CloseCase', error);
-      toast.error(sanitizeError(error));
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -160,22 +116,9 @@ export default function CaseDetail() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                {caseData.case_number}
-                {caseData.is_closed && <Lock className="h-6 w-6 text-muted-foreground" />}
-              </h1>
+              <h1 className="text-3xl font-bold">{caseData.case_number}</h1>
               <p className="text-muted-foreground">{caseData.offense_type}</p>
             </div>
-            {isAdmin && !caseData.is_closed && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowCloseDialog(true)}
-              >
-                <Lock className="h-4 w-4 mr-2" />
-                Close Case
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="sm"
@@ -264,12 +207,10 @@ export default function CaseDetail() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Linked Evidence ({evidence.length})</CardTitle>
-                {!caseData.is_closed && (
-                  <Button size="sm" onClick={() => setShowLinkModal(true)}>
-                    <Link2 className="h-4 w-4 mr-2" />
-                    Link Evidence
-                  </Button>
-                )}
+                <Button size="sm" onClick={() => setShowLinkModal(true)}>
+                  <Link2 className="h-4 w-4 mr-2" />
+                  Link Evidence
+                </Button>
               </CardHeader>
               <CardContent>
                 {evidence.length === 0 ? (
@@ -357,23 +298,6 @@ export default function CaseDetail() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleUnlink}>Unlink</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Close Case?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to close this case? Once closed, the case will become immutable and cannot be edited. All evidence links and case details will be permanently locked.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCloseCase} className="bg-destructive text-destructive-foreground">
-              Close Case Permanently
-            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
