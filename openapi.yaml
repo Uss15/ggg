@@ -1,0 +1,442 @@
+openapi: 3.0.3
+info:
+  title: SFEP Evidence Tracking API
+  description: |
+    Secure Forensic Evidence Platform - Chain of Custody Management API
+    
+    ## Authentication
+    All endpoints require JWT authentication via Supabase Auth.
+    Include the token in the Authorization header: `Bearer <token>`
+    
+  version: 1.0.0
+  contact:
+    name: SFEP Support
+    email: support@sfep.example.com
+  license:
+    name: Proprietary
+    
+servers:
+  - url: https://{project_id}.supabase.co/rest/v1
+    description: Supabase API
+    variables:
+      project_id:
+        default: qtpcdkposuvssdqxeqym
+        
+security:
+  - BearerAuth: []
+  
+tags:
+  - name: Evidence
+    description: Evidence bag management
+  - name: Cases
+    description: Case management
+  - name: Custody
+    description: Chain of custody operations
+  - name: Photos
+    description: Evidence photo management
+  - name: Audit
+    description: Audit log and random audits
+  - name: Users
+    description: User and role management
+  - name: Disposal
+    description: Evidence disposal requests
+
+paths:
+  /evidence_bags:
+    get:
+      tags: [Evidence]
+      summary: List all evidence bags
+      description: Returns all evidence bags accessible to the current user based on RLS policies
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+          example: "*,profiles:initial_collector(full_name,badge_number)"
+        - name: order
+          in: query
+          schema:
+            type: string
+          example: created_at.desc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvidenceBag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+          
+    post:
+      tags: [Evidence]
+      summary: Create new evidence bag
+      description: Creates a new evidence bag. Requires collector or admin role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvidenceBag'
+      responses:
+        '201':
+          description: Evidence bag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceBag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  
+  /evidence_bags/{id}:
+    get:
+      tags: [Evidence]
+      summary: Get evidence bag by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceBag'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+    patch:
+      tags: [Evidence]
+      summary: Update evidence bag
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEvidenceBag'
+      responses:
+        '200':
+          description: Evidence bag updated
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  /chain_of_custody_log:
+    get:
+      tags: [Custody]
+      summary: Get custody logs
+      parameters:
+        - name: bag_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Custody timeline
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustodyLog'
+                  
+    post:
+      tags: [Custody]
+      summary: Add custody entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustodyLog'
+      responses:
+        '201':
+          description: Custody entry added
+          
+  /cases:
+    get:
+      tags: [Cases]
+      summary: List all cases
+      responses:
+        '200':
+          description: List of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+                  
+    post:
+      tags: [Cases]
+      summary: Create new case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCase'
+      responses:
+        '201':
+          description: Case created
+          
+  /cases/{id}:
+    get:
+      tags: [Cases]
+      summary: Get case by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Case details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+                
+  /audit_log:
+    get:
+      tags: [Audit]
+      summary: Get audit log entries
+      description: Returns audit log. Admins see all, users see their own.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Audit entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        
+  schemas:
+    EvidenceBag:
+      type: object
+      required:
+        - id
+        - bag_id
+        - type
+        - description
+        - location
+        - current_status
+        - initial_collector
+        - date_collected
+      properties:
+        id:
+          type: string
+          format: uuid
+        bag_id:
+          type: string
+          example: "BAG-2025-0001"
+        type:
+          type: string
+          enum: [physical, digital, biological, documentary]
+        description:
+          type: string
+        location:
+          type: string
+        current_status:
+          type: string
+          enum: [collected, in_transport, in_lab, analyzed, archived]
+        initial_collector:
+          type: string
+          format: uuid
+        date_collected:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        notes:
+          type: string
+        qr_data:
+          type: string
+          
+    CreateEvidenceBag:
+      type: object
+      required:
+        - type
+        - description
+        - location
+      properties:
+        type:
+          type: string
+          enum: [physical, digital, biological, documentary]
+        description:
+          type: string
+        location:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        notes:
+          type: string
+          
+    UpdateEvidenceBag:
+      type: object
+      properties:
+        current_status:
+          type: string
+        location:
+          type: string
+        notes:
+          type: string
+          
+    CustodyLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bag_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [transfer, analysis, storage, retrieval, return]
+        performed_by:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        location:
+          type: string
+        notes:
+          type: string
+        digital_signature:
+          type: string
+        current_hash:
+          type: string
+          
+    CreateCustodyLog:
+      type: object
+      required:
+        - bag_id
+        - action
+        - location
+      properties:
+        bag_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        location:
+          type: string
+        notes:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        digital_signature:
+          type: string
+          
+    Case:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        case_number:
+          type: string
+          example: "CASE-2025-0001"
+        offense_type:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, under_investigation, closed]
+        lead_officer:
+          type: string
+          format: uuid
+        is_closed:
+          type: boolean
+        closed_at:
+          type: string
+          format: date-time
+          
+    CreateCase:
+      type: object
+      required:
+        - offense_type
+        - location
+      properties:
+        offense_type:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        lead_officer:
+          type: string
+          format: uuid
+          
+    AuditLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        details:
+          type: object
+          
+  responses:
+    Unauthorized:
+      description: Unauthorized - Invalid or missing token
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+    NotFound:
+      description: Resource not found
+    BadRequest:
+      description: Bad request - Invalid input
