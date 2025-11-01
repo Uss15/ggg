@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Camera, CameraOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,9 +17,18 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
   const [initializing, setInitializing] = useState(false);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const fallbackWarnedRef = useRef(false);
+  const [inlineWarning, setInlineWarning] = useState<string | null>(null);
 
   const startCamera = async () => {
     setInitializing(true);
+
+    // Inform user if running in embedded preview or insecure context
+    if (window.top !== window.self) {
+      setInlineWarning('Camera may be blocked inside an embedded preview. Use the New Tab button below.');
+    }
+    if (!window.isSecureContext) {
+      setInlineWarning('Camera requires HTTPS. Open the scanner in a secure tab.');
+    }
 
     if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
       toast.error('Camera API not available in this browser or context. Try Chrome or open in a new tab.');
@@ -151,12 +161,31 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    // Pre-flight environment checks for better UX
+    if (window.top !== window.self) {
+      setInlineWarning('Camera may be blocked in embedded preview. Use the New Tab button below.');
+    } else if (!window.isSecureContext) {
+      setInlineWarning('Camera requires HTTPS. Open in a secure tab.');
+    } else if (!('mediaDevices' in navigator)) {
+      setInlineWarning('Camera API not available in this browser.');
+    } else {
+      setInlineWarning(null);
+    }
+  }, []);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>QR Code Scanner</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {inlineWarning && (
+          <Alert>
+            <AlertTitle>Camera not available</AlertTitle>
+            <AlertDescription>{inlineWarning}</AlertDescription>
+          </Alert>
+        )}
         <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
           {isScanning ? (
             <>
