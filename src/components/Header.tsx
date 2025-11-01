@@ -1,4 +1,4 @@
-import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, BarChart, ShieldCheck, HelpCircle } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, ClipboardList, BarChart, ShieldCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -77,6 +77,10 @@ export const Header = ({ userName }: HeaderProps) => {
               <Button variant="outline" size="sm" onClick={() => navigate("/audits")}>
                 <Search className="h-4 w-4 mr-2" />
                 Audits
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Audit Log
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
