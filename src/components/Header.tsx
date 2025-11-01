@@ -1,4 +1,4 @@
-import { Shield, LogOut, Settings, FolderOpen, Package, QrCode, Trash2, Search } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, QrCode, Trash2, Search, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
+import { GlobalSearch } from "./GlobalSearch";
 
 interface HeaderProps {
   userName?: string;
@@ -15,6 +16,7 @@ interface HeaderProps {
 export const Header = ({ userName }: HeaderProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     checkAdmin();
@@ -71,12 +73,19 @@ export const Header = ({ userName }: HeaderProps) => {
                 <Search className="h-4 w-4 mr-2" />
                 Audits
               </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Audit Log
+              </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
                 Admin
               </Button>
             </>
           )}
+          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
+            <Search className="h-5 w-5" />
+          </Button>
           <NotificationBell />
           <ThemeToggle />
           {userName && (
@@ -90,6 +99,8 @@ export const Header = ({ userName }: HeaderProps) => {
           </Button>
         </div>
       </div>
+
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 };
