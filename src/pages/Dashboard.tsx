@@ -9,12 +9,14 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
+import { EvidenceMap } from "@/components/map/EvidenceMap";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
 import { exportToCSV } from "@/lib/csv-export";
 import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, QrCode, Search, Package, SlidersHorizontal, Download } from "lucide-react";
+import { Plus, QrCode, Search, Package, SlidersHorizontal, Download, Map } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -241,7 +243,20 @@ export default function Dashboard() {
           />
         </div>
 
-        {filteredBags.length === 0 ? (
+        <Tabs defaultValue="list" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="list">
+              <Package className="h-4 w-4 mr-2" />
+              List View
+            </TabsTrigger>
+            <TabsTrigger value="map">
+              <Map className="h-4 w-4 mr-2" />
+              Map View
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="list">
+            {filteredBags.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -287,7 +302,27 @@ export default function Dashboard() {
               </Card>
             ))}
           </div>
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="map">
+            <EvidenceMap
+              locations={filteredBags
+                .filter(bag => bag.latitude && bag.longitude)
+                .map(bag => ({
+                  id: bag.id,
+                  bag_id: bag.bag_id,
+                  latitude: bag.latitude!,
+                  longitude: bag.longitude!,
+                  description: bag.description,
+                  status: bag.current_status,
+                }))}
+              onMarkerClick={(location) => {
+                navigate(`/bag/${location.bag_id}`);
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
