@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sfep-v2';
+const CACHE_NAME = 'sfep-v1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,65 +7,51 @@ const urlsToCache = [
 
 // Install service worker
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
   );
 });
 
-// Fetch resources with smarter strategy
+// Fetch resources
 self.addEventListener('fetch', (event) => {
-  const req = event.request;
-
-  // Network-first for navigation and critical assets to avoid stale blank pages
-  if (req.mode === 'navigate' || ['script', 'style'].includes(req.destination)) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return res;
-        })
-        .catch(async () => {
-          const cache = await caches.open(CACHE_NAME);
-          const cached = await cache.match(req);
-          return cached || cache.match('/index.html');
-        })
-    );
-    return;
-  }
-
-  // Cache-first for other requests
   event.respondWith(
-    caches.match(req).then((response) => {
-      return (
-        response ||
-        fetch(req).then((res) => {
-          if (!res || res.status !== 200 || res.type !== 'basic') return res;
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return res;
-        })
-      );
-    })
+    caches.match(event.request)
+      .then((response) => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request).then((response) => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          return response;
+        });
+      })
+      .catch(() => {
+        // Return offline page if available
+        return caches.match('/offline.html');
+      })
   );
 });
 
 // Activate and clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    (async () => {
-      const cacheNames = await caches.keys();
-      await Promise.all(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
       );
-      await self.clients.claim();
-    })()
+    })
   );
 });
 

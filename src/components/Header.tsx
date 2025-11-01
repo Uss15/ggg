@@ -1,4 +1,4 @@
-import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, BarChart, ShieldCheck, HelpCircle } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, ClipboardList, BarChart, ShieldCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 import { GlobalSearch } from "./GlobalSearch";
-import { UserPresence } from "./UserPresence";
 
 interface HeaderProps {
   userName?: string;
@@ -78,6 +77,10 @@ export const Header = ({ userName }: HeaderProps) => {
                 <Search className="h-4 w-4 mr-2" />
                 Audits
               </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Audit Log
+              </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
                 Admin
@@ -91,7 +94,6 @@ export const Header = ({ userName }: HeaderProps) => {
             <Search className="h-5 w-5" />
           </Button>
           <NotificationBell />
-          <UserPresence />
           <ThemeToggle />
           {userName && (
             <Button 

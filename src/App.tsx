@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { SessionTimeout } from "@/components/SessionTimeout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateBag from "./pages/CreateBag";
@@ -18,6 +17,7 @@ import CreateCase from "@/pages/CreateCase";
 import CaseDetail from "@/pages/CaseDetail";
 import DisposalRequests from "@/pages/DisposalRequests";
 import Audits from "@/pages/Audits";
+import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
 import Profile from "@/pages/Profile";
@@ -25,6 +25,7 @@ import Settings from "@/pages/Settings";
 import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +59,6 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            {session && <SessionTimeout />}
             <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -99,6 +99,10 @@ const App = () => {
               element={session ? <Audits /> : <Navigate to="/" replace />}
             />
             <Route
+              path="/audit-log"
+              element={session ? <AuditLog /> : <Navigate to="/" replace />}
+            />
+            <Route
               path="/analytics"
               element={session ? <Analytics /> : <Navigate to="/" replace />}
             />
@@ -120,6 +124,7 @@ const App = () => {
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <OfflineIndicator />
         </BrowserRouter>
       </TooltipProvider>
       </QueryClientProvider>

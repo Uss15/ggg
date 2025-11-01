@@ -9,6 +9,7 @@ import { uploadEvidencePhoto } from "@/lib/supabase";
 import { toast } from "sonner";
 import { validateFileType } from "@/lib/validation";
 import { logError, sanitizeError } from "@/lib/errors";
+import { useFileHash } from "@/hooks/useFileHash";
 
 interface PhotoUploadProps {
   bagId: string;
@@ -19,6 +20,7 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const { hashFile, isHashing } = useFileHash();
 
   const validateFile = (file: File): string | null => {
     // Validate file type using secure validation
@@ -85,7 +87,11 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
 
       for (const file of selectedFiles) {
         try {
-          await uploadEvidencePhoto(bagId, file, notes);
+          // Calculate file hash for integrity verification
+          const fileHash = await hashFile(file);
+          
+          // Upload with hash metadata
+          await uploadEvidencePhoto(bagId, file, notes, fileHash || undefined);
           successCount++;
         } catch (error) {
           failCount++;
@@ -94,7 +100,7 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
       }
 
       if (successCount > 0) {
-        toast.success(`Successfully uploaded ${successCount} photo(s)`);
+        toast.success(`Successfully uploaded ${successCount} photo(s) with integrity hashes`);
         setSelectedFiles([]);
         setNotes("");
         onUploadComplete();
@@ -172,11 +178,11 @@ export const PhotoUpload = ({ bagId, onUploadComplete }: PhotoUploadProps) => {
 
         <Button
           onClick={handleUpload}
-          disabled={isUploading || selectedFiles.length === 0}
+          disabled={isUploading || isHashing || selectedFiles.length === 0}
           className="w-full"
         >
           <Upload className="h-4 w-4 mr-2" />
-          {isUploading ? "Uploading..." : `Upload ${selectedFiles.length} File(s)`}
+          {isUploading ? "Uploading..." : isHashing ? "Calculating hashes..." : `Upload ${selectedFiles.length} File(s)`}
         </Button>
       </CardContent>
     </Card>

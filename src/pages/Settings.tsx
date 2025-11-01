@@ -201,6 +201,19 @@ const Settings = () => {
                 </Button>
               </div>
 
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Two-Factor Authentication</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => toast.info('2FA setup coming soon')}>
+                  Enable 2FA
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
