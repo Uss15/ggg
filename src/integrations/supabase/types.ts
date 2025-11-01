@@ -59,6 +59,62 @@ export type Database = {
           },
         ]
       }
+      case_evidence: {
+        Row: {
+          bag_id: string
+          case_id: string
+          id: string
+          linked_at: string
+          linked_by: string | null
+          notes: string | null
+        }
+        Insert: {
+          bag_id: string
+          case_id: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          notes?: string | null
+        }
+        Update: {
+          bag_id?: string
+          case_id?: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_evidence_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_bags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_evidence_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_evidence_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cases: {
         Row: {
           case_number: string
