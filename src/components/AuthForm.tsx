@@ -79,15 +79,17 @@ export const AuthForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <Shield className="h-12 w-12 text-primary" />
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Shield className="h-10 w-10 text-primary" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Evidence Tracking</CardTitle>
-          <CardDescription>
-            {isLogin ? "Sign in to your account" : "Create a new account"}
+          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
+          <CardDescription className="text-base">
+            {isLogin ? "Sign in to access your evidence management system" : "Create your account to get started"}
           </CardDescription>
         </CardHeader>
         <CardContent>

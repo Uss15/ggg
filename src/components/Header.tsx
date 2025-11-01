@@ -93,9 +93,14 @@ export const Header = ({ userName }: HeaderProps) => {
           <NotificationBell />
           <ThemeToggle />
           {userName && (
-            <span className="text-sm text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/profile")}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               {userName}
-            </span>
+            </Button>
           )}
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
