@@ -9,7 +9,9 @@ import { CustodyTimeline } from "@/components/evidence/CustodyTimeline";
 import { AddCustodyModal } from "@/components/evidence/AddCustodyModal";
 import { PhotoUpload } from "@/components/evidence/PhotoUpload";
 import { PhotoGallery } from "@/components/evidence/PhotoGallery";
-import { ArrowLeft, Plus, Upload, RefreshCw } from "lucide-react";
+import { ArrowLeft, Plus, Upload, RefreshCw, Link2, Trash2 } from "lucide-react";
+import { getEvidenceCases } from "@/lib/supabase-enhanced";
+import { DisposalRequestModal } from "@/components/disposal/DisposalRequestModal";
 import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
 import { toast } from "sonner";
 import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
@@ -29,6 +31,8 @@ export default function BagDetail() {
   const [showAddCustody, setShowAddCustody] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [showUpdateStatus, setShowUpdateStatus] = useState(false);
+  const [showDisposalRequest, setShowDisposalRequest] = useState(false);
+  const [linkedCases, setLinkedCases] = useState<any[]>([]);
   const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
@@ -58,21 +62,24 @@ export default function BagDetail() {
     
     setIsLoading(true);
     try {
-      const [bagData, custodyData, photosData] = await Promise.all([
-        getEvidenceBag(bagId),
-        getChainOfCustody(bagId),
-        getEvidencePhotos(bagId),
-      ]);
-
+      const bagData = await getEvidenceBag(bagId);
+      
       if (!bagData) {
         toast.error("Evidence bag not found");
         navigate("/dashboard");
         return;
       }
 
+      const [custodyData, photosData, casesData] = await Promise.all([
+        getChainOfCustody(bagId),
+        getEvidencePhotos(bagId),
+        getEvidenceCases(bagData.id),
+      ]);
+
       setBag(bagData);
       setCustody(custodyData || []);
       setPhotos(photosData || []);
+      setLinkedCases(casesData || []);
     } catch (error: any) {
       if (import.meta.env.DEV) {
         console.error("Error loading bag:", error);
@@ -133,14 +140,26 @@ export default function BagDetail() {
             </div>
             <div className="flex gap-2 items-center">
               <StatusBadge status={bag.current_status} />
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowUpdateStatus(true)}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Update Status
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowUpdateStatus(true)}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Update Status
+                </Button>
+                {bag.current_status !== 'archived' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDisposalRequest(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Request Disposal
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -179,6 +198,36 @@ export default function BagDetail() {
 
             <QRCodeDisplay bagId={bag.bag_id} url={bag.qr_data || ""} />
           </div>
+
+          {linkedCases.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Linked Cases ({linkedCases.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {linkedCases.map((item) => (
+                    <Card
+                      key={item.id}
+                      className="p-3 cursor-pointer hover:bg-accent transition-colors"
+                      onClick={() => navigate(`/cases/${item.case_id}`)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold">{item.cases.case_number}</p>
+                          <p className="text-sm text-muted-foreground">{item.cases.offense_type}</p>
+                          {item.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">{item.notes}</p>
+                          )}
+                        </div>
+                        <Link2 className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <PhotoGallery photos={photos} />
 
@@ -228,6 +277,14 @@ export default function BagDetail() {
         onOpenChange={setShowUpdateStatus}
         bagId={bag.id}
         currentStatus={bag.current_status}
+        onSuccess={loadBagData}
+      />
+
+      <DisposalRequestModal
+        open={showDisposalRequest}
+        onOpenChange={setShowDisposalRequest}
+        bagId={bag.id}
+        bagName={bag.bag_id}
         onSuccess={loadBagData}
       />
     </div>

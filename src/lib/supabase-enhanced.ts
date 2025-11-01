@@ -105,16 +105,6 @@ export const updateCase = async (id: string, updates: Partial<Case>) => {
   return data as unknown as Case;
 };
 
-export const getCaseEvidence = async (caseId: string): Promise<any[]> => {
-  const query: any = supabase.from('evidence_bags');
-  const { data, error } = await query
-    .select('*')
-    .eq('case_id', caseId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-};
 
 // Office Management
 export const getAllOffices = async () => {
@@ -356,4 +346,209 @@ export const disposeEvidence = async (
   });
   
   return data;
+};
+
+/**
+ * Link evidence bag to case
+ */
+export const linkEvidenceToCase = async (
+  caseId: string,
+  bagId: string,
+  notes?: string
+): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('case_evidence' as any)
+    .insert({
+      case_id: caseId,
+      bag_id: bagId,
+      linked_by: user.id,
+      notes
+    });
+
+  if (error) throw error;
+
+  await logAudit('link_evidence', 'case', caseId, { bag_id: bagId, notes });
+};
+
+/**
+ * Unlink evidence bag from case
+ */
+export const unlinkEvidenceFromCase = async (
+  caseId: string,
+  bagId: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from('case_evidence' as any)
+    .delete()
+    .eq('case_id', caseId)
+    .eq('bag_id', bagId);
+
+  if (error) throw error;
+
+  await logAudit('unlink_evidence', 'case', caseId, { bag_id: bagId });
+};
+
+/**
+ * Get evidence bags linked to a case
+ */
+export const getCaseEvidenceBags = async (caseId: string) => {
+  const { data, error } = await supabase
+    .from('case_evidence' as any)
+    .select(`
+      *,
+      evidence_bags (
+        *,
+        profiles:initial_collector (
+          full_name,
+          badge_number
+        )
+      )
+    `)
+    .eq('case_id', caseId)
+    .order('linked_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Get cases linked to an evidence bag
+ */
+export const getEvidenceCases = async (bagId: string) => {
+  const { data, error } = await supabase
+    .from('case_evidence' as any)
+    .select(`
+      *,
+      cases (
+        *,
+        offices (name, city),
+        profiles:lead_officer (full_name, badge_number)
+      )
+    `)
+    .eq('bag_id', bagId)
+    .order('linked_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Get all evidence bags
+ */
+export const getAllEvidenceBags = async () => {
+  const { data, error } = await supabase
+    .from('evidence_bags')
+    .select('*, profiles:initial_collector(full_name, badge_number)')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Create disposal request
+ */
+export const createDisposalRequest = async (
+  bagId: string,
+  disposalMethod: 'released' | 'destroyed' | 'returned',
+  reason: string,
+  witnessName?: string,
+  documentationUrl?: string
+) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('disposal_requests' as any)
+    .insert({
+      bag_id: bagId,
+      requested_by: user.id,
+      disposal_method: disposalMethod,
+      reason,
+      witness_name: witnessName,
+      documentation_url: documentationUrl,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  await logAudit('request_disposal', 'evidence_bag', bagId, {
+    disposal_method: disposalMethod,
+    reason
+  });
+
+  return data;
+};
+
+/**
+ * Get disposal requests (admin)
+ */
+export const getDisposalRequests = async (status?: 'pending' | 'approved' | 'rejected') => {
+  let query: any = supabase
+    .from('disposal_requests' as any)
+    .select(`
+      *,
+      evidence_bags (bag_id, description, type),
+      requester:profiles!disposal_requests_requested_by_fkey (full_name, badge_number),
+      reviewer:profiles!disposal_requests_reviewed_by_fkey (full_name)
+    `)
+    .order('requested_at', { ascending: false });
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Review disposal request (admin)
+ */
+export const reviewDisposalRequest = async (
+  requestId: string,
+  approved: boolean,
+  reviewNotes?: string
+) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('disposal_requests' as any)
+    .update({
+      status: approved ? 'approved' : 'rejected',
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+      review_notes: reviewNotes
+    })
+    .eq('id', requestId);
+
+  if (error) throw error;
+
+  // If approved, update bag status to archived
+  if (approved) {
+    const { data: request } = await supabase
+      .from('disposal_requests' as any)
+      .select('bag_id, disposal_method')
+      .eq('id', requestId)
+      .single();
+
+    if (request) {
+      await supabase
+        .from('evidence_bags')
+        .update({ current_status: 'archived' })
+        .eq('id', request.bag_id);
+
+      await logAudit('approve_disposal', 'evidence_bag', request.bag_id, {
+        disposal_method: request.disposal_method,
+        review_notes: reviewNotes
+      });
+    }
+  }
 };
