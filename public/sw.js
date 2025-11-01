@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sfep-v3';
+const CACHE_NAME = 'sfep-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,8 +18,8 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // Navigation requests: network-first with HTML fallback
-  if (req.mode === 'navigate') {
+  // Network-first for navigation and critical assets to avoid stale blank pages
+  if (req.mode === 'navigate' || ['script', 'style'].includes(req.destination)) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -36,21 +36,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Scripts and styles: network-first, fallback ONLY to cached asset (never HTML)
-  if (['script', 'style'].includes(req.destination)) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // Other requests: cache-first
+  // Cache-first for other requests
   event.respondWith(
     caches.match(req).then((response) => {
       return (
