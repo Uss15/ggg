@@ -9,7 +9,7 @@ import { CustodyTimeline } from "@/components/evidence/CustodyTimeline";
 import { AddCustodyModal } from "@/components/evidence/AddCustodyModal";
 import { PhotoUpload } from "@/components/evidence/PhotoUpload";
 import { PhotoGallery } from "@/components/evidence/PhotoGallery";
-import { ArrowLeft, Plus, Upload, RefreshCw, Link2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Upload, RefreshCw, Link2, Trash2, FileText } from "lucide-react";
 import { getEvidenceCases } from "@/lib/supabase-enhanced";
 import { DisposalRequestModal } from "@/components/disposal/DisposalRequestModal";
 import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
@@ -138,28 +138,37 @@ export default function BagDetail() {
               <h1 className="text-3xl font-bold text-foreground">{bag.bag_id}</h1>
               <p className="text-muted-foreground">Evidence Bag Details</p>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <StatusBadge status={bag.current_status} />
-              <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  const { generateCustodyReport } = await import('@/lib/pdf-reports');
+                  generateCustodyReport(bag, custody, photos);
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowUpdateStatus(true)}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Update Status
+              </Button>
+              {bag.current_status !== 'archived' && (
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setShowUpdateStatus(true)}
+                  onClick={() => setShowDisposalRequest(true)}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Update Status
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Request Disposal
                 </Button>
-                {bag.current_status !== 'archived' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowDisposalRequest(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Request Disposal
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </div>
 

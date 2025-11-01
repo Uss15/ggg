@@ -119,6 +119,17 @@ export default function CaseDetail() {
               <h1 className="text-3xl font-bold">{caseData.case_number}</h1>
               <p className="text-muted-foreground">{caseData.offense_type}</p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                const { generateCaseReport } = await import('@/lib/pdf-reports');
+                generateCaseReport(caseData, evidence);
+              }}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
             <Badge className={statusColors[caseData.status as keyof typeof statusColors]}>
               {statusLabels[caseData.status as keyof typeof statusLabels]}
             </Badge>

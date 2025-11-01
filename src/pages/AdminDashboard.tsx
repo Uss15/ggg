@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BarChart, Users, Package, FileText, TrendingUp } from "lucide-react";
+import { BarChart, Users, Package, FileText, TrendingUp, UserPlus, Tags } from "lucide-react";
 import { UserRoleManager } from "@/components/admin/UserRoleManager";
 import { StatsChart } from "@/components/admin/StatsChart";
+import { UserProvisioningModal } from "@/components/admin/UserProvisioningModal";
+import { TagManager } from "@/components/tags/TagManager";
 import { getProfile, hasRole } from "@/lib/supabase";
+import { getAllOffices } from "@/lib/supabase-enhanced";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [offices, setOffices] = useState<any[]>([]);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [stats, setStats] = useState({
     totalBags: 0,
     collected: 0,
@@ -49,6 +54,16 @@ export default function AdminDashboard() {
     setProfile(profileData);
     setIsAdmin(true);
     loadStats();
+    loadOffices();
+  };
+
+  const loadOffices = async () => {
+    try {
+      const data = await getAllOffices();
+      setOffices(data || []);
+    } catch (error) {
+      console.error('Failed to load offices:', error);
+    }
   };
 
   const loadStats = async () => {
@@ -177,7 +192,17 @@ export default function AdminDashboard() {
             </TabsContent>
 
             <TabsContent value="users" className="space-y-4">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setShowUserModal(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Provision New User
+                </Button>
+              </div>
               <UserRoleManager />
+              
+              <div className="mt-6">
+                <TagManager />
+              </div>
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-4">
@@ -193,6 +218,15 @@ export default function AdminDashboard() {
           </Tabs>
         </div>
       </main>
+
+      <UserProvisioningModal
+        open={showUserModal}
+        onOpenChange={setShowUserModal}
+        offices={offices}
+        onSuccess={() => {
+          // Could refresh user list here if needed
+        }}
+      />
     </div>
   );
 }
