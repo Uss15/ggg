@@ -10,8 +10,9 @@ import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
+import { exportToCSV } from "@/lib/csv-export";
 import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, QrCode, Search, Package, SlidersHorizontal } from "lucide-react";
+import { Plus, QrCode, Search, Package, SlidersHorizontal, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -129,6 +130,25 @@ export default function Dashboard() {
     return counts;
   };
 
+  const handleExportCSV = () => {
+    try {
+      const exportData = filteredBags.map(bag => ({
+        bag_id: bag.bag_id,
+        type: bag.type,
+        description: bag.description,
+        status: bag.current_status,
+        location: bag.location,
+        date_collected: new Date(bag.date_collected).toLocaleString(),
+        notes: bag.notes || '',
+      }));
+      
+      exportToCSV(exportData, `evidence-bags-${new Date().toISOString().split('T')[0]}.csv`);
+      toast.success("Evidence data exported to CSV");
+    } catch (error) {
+      toast.error("Failed to export data");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -158,6 +178,10 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Manage and track all evidence bags</p>
             </div>
             <div className="flex gap-2">
+              <Button onClick={handleExportCSV} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
               <Button onClick={() => navigate("/scan")} variant="outline">
                 <QrCode className="h-4 w-4 mr-2" />
                 Scan QR
