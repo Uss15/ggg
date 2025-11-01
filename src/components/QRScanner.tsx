@@ -14,40 +14,50 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const fallbackWarnedRef = useRef(false);
 
   const startCamera = async () => {
-    try {
+    const tryStart = async (mode: 'environment' | 'user') => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
+        video: { facingMode: { ideal: mode } },
+        audio: false,
       });
-      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Ensure autoplay works across browsers (especially iOS)
+        videoRef.current.muted = true;
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.setAttribute('playsinline', 'true');
         setStream(mediaStream);
-        
-        // Explicitly play the video
-        try {
-          await videoRef.current.play();
-          setIsScanning(true);
-          startScanning();
-          toast.success("Camera started successfully");
-        } catch (playError) {
-          console.error("Video play error:", playError);
-          toast.error("Failed to start camera preview");
-          // Clean up the stream if play fails
-          mediaStream.getTracks().forEach(track => track.stop());
-        }
+        await new Promise<void>((resolve) => {
+          if (!videoRef.current) return resolve();
+          videoRef.current.onloadedmetadata = () => resolve();
+          if (videoRef.current.readyState >= 1) resolve();
+        });
+        await videoRef.current.play();
+        setIsScanning(true);
+        startScanning();
+        toast.success('Camera started');
       }
-    } catch (error: any) {
-      console.error("Camera access error:", error);
-      
-      // Provide specific error messages
-      if (error.name === 'NotAllowedError') {
-        toast.error("Camera permission denied. Please allow camera access in your browser settings.");
-      } else if (error.name === 'NotFoundError') {
-        toast.error("No camera found on this device.");
-      } else {
-        toast.error("Unable to access camera. Please check permissions.");
+    };
+
+    try {
+      await tryStart('environment');
+    } catch (err1: any) {
+      console.warn('Environment camera failed, falling back to user camera', err1);
+      try {
+        await tryStart('user');
+      } catch (error: any) {
+        console.error('Camera access error:', error);
+        if (error.name === 'NotAllowedError') {
+          toast.error('Camera permission denied. Allow access in browser settings.');
+        } else if (error.name === 'NotFoundError' || error.message?.includes('Requested device not found')) {
+          toast.error('No camera found on this device.');
+        } else if (location.protocol !== 'https:') {
+          toast.error('Camera requires HTTPS. Please use a secure connection.');
+        } else {
+          toast.error('Unable to access camera. Please check permissions.');
+        }
       }
     }
   };
@@ -97,11 +107,11 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
           handleQRDetected(qrData);
         }
       } else {
-        // Fallback: Manual QR detection using image data
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        // This is a placeholder - in production, use a library like jsQR
-        toast.info("Please use manual entry. QR scanning requires browser support.");
-        stopCamera();
+        // Fallback: Browser lacks BarcodeDetector; keep camera running
+        if (!fallbackWarnedRef.current) {
+          toast.info("Live QR scanning not supported in this browser. Use Manual Entry.");
+          fallbackWarnedRef.current = true;
+        }
       }
     } catch (error) {
       console.error("QR detection error:", error);
@@ -140,6 +150,7 @@ export const QRScanner = ({ onScan }: QRScannerProps) => {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-full object-cover"
               />
               <canvas ref={canvasRef} className="hidden" />
