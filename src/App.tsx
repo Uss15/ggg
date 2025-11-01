@@ -53,6 +53,8 @@ const App = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
+  console.log('App rendering, session:', session ? 'exists' : 'null');
+
   return (
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

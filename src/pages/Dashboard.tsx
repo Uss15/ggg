@@ -21,6 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
+  console.log('Dashboard component rendering');
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [bags, setBags] = useState<any[]>([]);
