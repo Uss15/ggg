@@ -21,22 +21,12 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Disable service worker and clear any existing registrations/caches to prevent white screen from stale assets
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const reg of registrations) {
-            reg.unregister();
-          }
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.log('Service Worker registration failed'));
         });
-        if (window.caches && caches.keys) {
-          caches.keys().then((keys) => {
-            keys.forEach((key) => {
-              if (key === 'sfep-v1' || key.startsWith('sfep-')) {
-                caches.delete(key);
-              }
-            });
-          });
-        }
       }
     </script>
   </body>
