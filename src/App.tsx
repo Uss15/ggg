@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { SessionTimeout } from "@/components/SessionTimeout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateBag from "./pages/CreateBag";
@@ -60,7 +59,6 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            {session && <SessionTimeout />}
             <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

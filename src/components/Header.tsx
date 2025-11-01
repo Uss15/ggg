@@ -8,7 +8,6 @@ import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 import { GlobalSearch } from "./GlobalSearch";
-import { UserPresence } from "./UserPresence";
 
 interface HeaderProps {
   userName?: string;
@@ -95,7 +94,6 @@ export const Header = ({ userName }: HeaderProps) => {
             <Search className="h-5 w-5" />
           </Button>
           <NotificationBell />
-          <UserPresence />
           <ThemeToggle />
           {userName && (
             <Button 

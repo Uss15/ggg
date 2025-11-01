@@ -10,8 +10,6 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Settings as SettingsIcon, Bell, Shield, Database, Download } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { TwoFactorStatus } from '@/components/security/TwoFactorStatus';
-import { TwoFactorSetup } from '@/components/security/TwoFactorSetup';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -23,8 +21,6 @@ const Settings = () => {
     auditAlerts: true,
     exportFormat: 'csv',
   });
-  const [showMFASetup, setShowMFASetup] = useState(false);
-  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     checkAuth();
@@ -36,7 +32,6 @@ const Settings = () => {
       navigate('/');
       return;
     }
-    setUserId(user.id);
     setLoading(false);
   };
 
@@ -206,20 +201,21 @@ const Settings = () => {
                 </Button>
               </div>
 
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Two-Factor Authentication</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => toast.info('2FA setup coming soon')}>
+                  Enable 2FA
+                </Button>
+              </div>
             </CardContent>
           </Card>
-
-          {showMFASetup ? (
-            <TwoFactorSetup 
-              userId={userId} 
-              onComplete={() => {
-                setShowMFASetup(false);
-                toast.success("Two-factor authentication enabled!");
-              }} 
-            />
-          ) : (
-            <TwoFactorStatus onSetupClick={() => setShowMFASetup(true)} />
-          )}
 
           <Card>
             <CardHeader>
