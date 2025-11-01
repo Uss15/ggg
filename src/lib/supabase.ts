@@ -208,7 +208,7 @@ export interface EvidencePhoto {
   created_at: string;
 }
 
-export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: string) => {
+export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: string, fileHash?: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("User not authenticated");
 
@@ -232,6 +232,8 @@ export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: str
       photo_url: filePath, // Store path, not public URL
       uploaded_by: user.id,
       notes: notes || null,
+      file_hash: fileHash || null,
+      file_size: file.size,
     })
     .select()
     .single();

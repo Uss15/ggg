@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_check_items: {
+        Row: {
+          actual_location: string | null
+          actual_status: string | null
+          audit_id: string
+          bag_id: string
+          checked_at: string | null
+          checked_by: string | null
+          created_at: string
+          discrepancy: boolean | null
+          expected_location: string
+          expected_status: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          actual_location?: string | null
+          actual_status?: string | null
+          audit_id: string
+          bag_id: string
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          discrepancy?: boolean | null
+          expected_location: string
+          expected_status: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          actual_location?: string | null
+          actual_status?: string | null
+          audit_id?: string
+          bag_id?: string
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          discrepancy?: boolean | null
+          expected_location?: string
+          expected_status?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_check_items_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audit_checks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_check_items_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_bags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_checks: {
+        Row: {
+          audit_name: string
+          checked_items: number
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          discrepancies: number
+          id: string
+          notes: string | null
+          status: string
+          total_items: number
+        }
+        Insert: {
+          audit_name: string
+          checked_items?: number
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          discrepancies?: number
+          id?: string
+          notes?: string | null
+          status?: string
+          total_items?: number
+        }
+        Update: {
+          audit_name?: string
+          checked_items?: number
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          discrepancies?: number
+          id?: string
+          notes?: string | null
+          status?: string
+          total_items?: number
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -119,9 +218,12 @@ export type Database = {
         Row: {
           case_number: string
           closed_at: string | null
+          closed_by: string | null
+          closure_notes: string | null
           created_at: string
           description: string | null
           id: string
+          is_closed: boolean | null
           lead_officer: string
           location: string
           notes: string | null
@@ -133,9 +235,12 @@ export type Database = {
         Insert: {
           case_number: string
           closed_at?: string | null
+          closed_by?: string | null
+          closure_notes?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_closed?: boolean | null
           lead_officer: string
           location: string
           notes?: string | null
@@ -147,9 +252,12 @@ export type Database = {
         Update: {
           case_number?: string
           closed_at?: string | null
+          closed_by?: string | null
+          closure_notes?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_closed?: boolean | null
           lead_officer?: string
           location?: string
           notes?: string | null
@@ -187,41 +295,130 @@ export type Database = {
           action: Database["public"]["Enums"]["action_type"]
           bag_id: string
           created_at: string
+          current_hash: string | null
+          digital_signature: string | null
           id: string
           latitude: number | null
           location: string
           longitude: number | null
           notes: string | null
           performed_by: string
+          previous_hash: string | null
+          signature_timestamp: string | null
           timestamp: string
         }
         Insert: {
           action: Database["public"]["Enums"]["action_type"]
           bag_id: string
           created_at?: string
+          current_hash?: string | null
+          digital_signature?: string | null
           id?: string
           latitude?: number | null
           location: string
           longitude?: number | null
           notes?: string | null
           performed_by: string
+          previous_hash?: string | null
+          signature_timestamp?: string | null
           timestamp?: string
         }
         Update: {
           action?: Database["public"]["Enums"]["action_type"]
           bag_id?: string
           created_at?: string
+          current_hash?: string | null
+          digital_signature?: string | null
           id?: string
           latitude?: number | null
           location?: string
           longitude?: number | null
           notes?: string | null
           performed_by?: string
+          previous_hash?: string | null
+          signature_timestamp?: string | null
           timestamp?: string
         }
         Relationships: [
           {
             foreignKeyName: "chain_of_custody_log_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_bags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disposal_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          bag_id: string
+          completed_at: string | null
+          created_at: string
+          disposal_documentation: string | null
+          disposal_type: string
+          id: string
+          notes: string | null
+          reason: string
+          requested_at: string
+          requested_by: string
+          status: string
+          updated_at: string
+          witness1_name: string | null
+          witness1_signature: string | null
+          witness1_signed_at: string | null
+          witness2_name: string | null
+          witness2_signature: string | null
+          witness2_signed_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bag_id: string
+          completed_at?: string | null
+          created_at?: string
+          disposal_documentation?: string | null
+          disposal_type: string
+          id?: string
+          notes?: string | null
+          reason: string
+          requested_at?: string
+          requested_by: string
+          status?: string
+          updated_at?: string
+          witness1_name?: string | null
+          witness1_signature?: string | null
+          witness1_signed_at?: string | null
+          witness2_name?: string | null
+          witness2_signature?: string | null
+          witness2_signed_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bag_id?: string
+          completed_at?: string | null
+          created_at?: string
+          disposal_documentation?: string | null
+          disposal_type?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          status?: string
+          updated_at?: string
+          witness1_name?: string | null
+          witness1_signature?: string | null
+          witness1_signed_at?: string | null
+          witness2_name?: string | null
+          witness2_signature?: string | null
+          witness2_signed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disposal_requests_bag_id_fkey"
             columns: ["bag_id"]
             isOneToOne: false
             referencedRelation: "evidence_bags"
@@ -284,6 +481,8 @@ export type Database = {
         Row: {
           bag_id: string
           created_at: string
+          file_hash: string | null
+          file_size: number | null
           id: string
           notes: string | null
           photo_url: string
@@ -293,6 +492,8 @@ export type Database = {
         Insert: {
           bag_id: string
           created_at?: string
+          file_hash?: string | null
+          file_size?: number | null
           id?: string
           notes?: string | null
           photo_url: string
@@ -302,6 +503,8 @@ export type Database = {
         Update: {
           bag_id?: string
           created_at?: string
+          file_hash?: string | null
+          file_size?: number | null
           id?: string
           notes?: string | null
           photo_url?: string
@@ -478,6 +681,16 @@ export type Database = {
       }
       generate_bag_id: { Args: never; Returns: string }
       generate_case_number: { Args: never; Returns: string }
+      generate_custody_hash: {
+        Args: {
+          p_action: string
+          p_bag_id: string
+          p_performed_by: string
+          p_previous_hash: string
+          p_timestamp: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -503,7 +716,12 @@ export type Database = {
         | "received"
         | "analyzed"
         | "archived"
-      app_role: "collector" | "transport" | "lab_tech" | "admin"
+      app_role:
+        | "collector"
+        | "transport"
+        | "lab_tech"
+        | "admin"
+        | "investigator"
       evidence_status:
         | "collected"
         | "in_transport"
@@ -652,7 +870,7 @@ export const Constants = {
         "analyzed",
         "archived",
       ],
-      app_role: ["collector", "transport", "lab_tech", "admin"],
+      app_role: ["collector", "transport", "lab_tech", "admin", "investigator"],
       evidence_status: [
         "collected",
         "in_transport",

@@ -15,7 +15,9 @@ import Cases from "@/pages/Cases";
 import CreateCase from "@/pages/CreateCase";
 import CaseDetail from "@/pages/CaseDetail";
 import DisposalRequests from "@/pages/DisposalRequests";
+import Audits from "@/pages/Audits";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();
 
@@ -44,10 +46,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route
@@ -86,10 +89,15 @@ const App = () => {
               path="/disposal-requests"
               element={session ? <DisposalRequests /> : <Navigate to="/" replace />}
             />
+            <Route
+              path="/audits"
+              element={session ? <Audits /> : <Navigate to="/" replace />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { hasRole } from "@/lib/supabase";
 import { NotificationBell } from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
   userName?: string;
@@ -73,6 +74,7 @@ export const Header = ({ userName }: HeaderProps) => {
             </>
           )}
           <NotificationBell />
+          <ThemeToggle />
           {userName && (
             <span className="text-sm text-muted-foreground">
               {userName}
