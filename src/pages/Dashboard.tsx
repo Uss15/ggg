@@ -9,7 +9,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
 import { QuickActions } from "@/components/QuickActions";
-import { ActivityFeed } from "@/components/ActivityFeed";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { EvidenceMap } from "@/components/map/EvidenceMap";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
@@ -196,8 +195,6 @@ export default function Dashboard() {
           <DashboardStats bags={bags} />
           
           <QuickActions />
-          
-          <ActivityFeed />
 
           <div className="space-y-3">
             <div className="flex gap-2">

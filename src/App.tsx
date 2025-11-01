@@ -21,8 +21,6 @@ import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
 import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
-import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -113,14 +111,6 @@ const App = () => {
             <Route
               path="/profile"
               element={session ? <Profile /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/settings"
-              element={session ? <Settings /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/help"
-              element={session ? <Help /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
