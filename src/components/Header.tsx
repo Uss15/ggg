@@ -1,4 +1,4 @@
-import { Shield, LogOut, Settings, FolderOpen, Package, QrCode, Trash2, Search, ClipboardList } from "lucide-react";
+import { Shield, LogOut, Settings, FolderOpen, Package, Trash2, Search, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -58,10 +58,6 @@ export const Header = ({ userName }: HeaderProps) => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/cases")}>
             <FolderOpen className="h-4 w-4 mr-2" />
             Cases
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/scan")}>
-            <QrCode className="h-4 w-4 mr-2" />
-            Scan
           </Button>
           {isAdmin && (
             <>

@@ -63,10 +63,6 @@ const App = () => {
               element={session ? <CreateBag /> : <Navigate to="/" replace />}
             />
             <Route
-              path="/scan"
-              element={session ? <ScanQR /> : <Navigate to="/" replace />}
-            />
-            <Route
               path="/bag/:bagId"
               element={session ? <BagDetail /> : <Navigate to="/" replace />}
             />
