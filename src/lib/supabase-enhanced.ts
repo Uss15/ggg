@@ -533,8 +533,8 @@ export const reviewDisposalRequest = async (
 
   // If approved, update bag status to archived
   if (approved) {
-    const { data: request } = await supabase
-      .from('disposal_requests' as any)
+    const { data: request } = await (supabase as any)
+      .from('disposal_requests')
       .select('bag_id, disposal_method')
       .eq('id', requestId)
       .single();
@@ -543,10 +543,10 @@ export const reviewDisposalRequest = async (
       await supabase
         .from('evidence_bags')
         .update({ current_status: 'archived' })
-        .eq('id', request.bag_id);
+        .eq('id', (request as any).bag_id);
 
-      await logAudit('approve_disposal', 'evidence_bag', request.bag_id, {
-        disposal_method: request.disposal_method,
+      await logAudit('approve_disposal', 'evidence_bag', (request as any).bag_id, {
+        disposal_method: (request as any).disposal_method,
         review_notes: reviewNotes
       });
     }

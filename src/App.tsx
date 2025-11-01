@@ -11,8 +11,10 @@ import CreateBag from "./pages/CreateBag";
 import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
 import AdminDashboard from "./pages/AdminDashboard";
-import Cases from "./pages/Cases";
-import CreateCase from "./pages/CreateCase";
+import Cases from "@/pages/Cases";
+import CreateCase from "@/pages/CreateCase";
+import CaseDetail from "@/pages/CaseDetail";
+import DisposalRequests from "@/pages/DisposalRequests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +77,14 @@ const App = () => {
             <Route
               path="/cases/create"
               element={session ? <CreateCase /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/cases/:caseId"
+              element={session ? <CaseDetail /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/disposal-requests"
+              element={session ? <DisposalRequests /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

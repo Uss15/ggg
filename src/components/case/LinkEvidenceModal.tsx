@@ -51,12 +51,12 @@ export function LinkEvidenceModal({ open, onOpenChange, caseId, onSuccess }: Lin
       const allBags = await getAllEvidenceBags();
       
       // Get bags already linked to this case
-      const { data: linkedBags } = await supabase
+      const { data: linkedBags } = await (supabase as any)
         .from('case_evidence')
         .select('bag_id')
         .eq('case_id', caseId);
 
-      const linkedBagIds = new Set(linkedBags?.map(l => l.bag_id) || []);
+      const linkedBagIds = new Set(linkedBags?.map((l: any) => l.bag_id) || []);
       
       // Filter out already linked bags
       const availableBags = allBags?.filter(bag => !linkedBagIds.has(bag.id)) || [];
