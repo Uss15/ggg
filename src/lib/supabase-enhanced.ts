@@ -399,13 +399,7 @@ export const getCaseEvidenceBags = async (caseId: string) => {
     .from('case_evidence' as any)
     .select(`
       *,
-      evidence_bags (
-        *,
-        profiles!evidence_bags_initial_collector_fkey (
-          full_name,
-          badge_number
-        )
-      )
+      evidence_bags (*)
     `)
     .eq('case_id', caseId)
     .order('linked_at', { ascending: false });

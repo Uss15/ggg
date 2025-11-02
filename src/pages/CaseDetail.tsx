@@ -64,16 +64,21 @@ export default function CaseDetail() {
 
   const loadCaseData = async () => {
     if (!caseId) return;
-    
     try {
       setIsLoading(true);
-      const [caseInfo, evidenceList] = await Promise.all([
-        getCaseById(caseId),
-        getCaseEvidenceBags(caseId)
-      ]);
 
+      // Always load the case first so the page can render even if evidence fetch fails
+      const caseInfo = await getCaseById(caseId);
       setCaseData(caseInfo);
-      setEvidence(evidenceList || []);
+
+      try {
+        const evidenceList = await getCaseEvidenceBags(caseId);
+        setEvidence(evidenceList || []);
+      } catch (e) {
+        logError('LoadCaseEvidence', e);
+        // Don't block the page if evidence join fails
+        setEvidence([]);
+      }
     } catch (error) {
       logError('LoadCaseDetail', error);
       toast.error(sanitizeError(error));
