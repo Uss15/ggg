@@ -15,6 +15,13 @@ export const QuickActions = () => {
       variant: 'default' as const,
     },
     {
+      icon: QrCode,
+      label: 'Scan QR',
+      description: 'Scan evidence QR code',
+      onClick: () => navigate('/scan'),
+      variant: 'outline' as const,
+    },
+    {
       icon: FolderPlus,
       label: 'New Case',
       description: 'Create new case',
