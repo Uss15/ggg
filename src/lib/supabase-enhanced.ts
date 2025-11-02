@@ -401,7 +401,7 @@ export const getCaseEvidenceBags = async (caseId: string) => {
       *,
       evidence_bags (
         *,
-        profiles:initial_collector (
+        profiles!evidence_bags_initial_collector_fkey (
           full_name,
           badge_number
         )
@@ -441,7 +441,7 @@ export const getEvidenceCases = async (bagId: string) => {
 export const getAllEvidenceBags = async () => {
   const { data, error } = await supabase
     .from('evidence_bags')
-    .select('*, profiles:initial_collector(full_name, badge_number)')
+    .select('*, profiles!evidence_bags_initial_collector_fkey(full_name, badge_number)')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
