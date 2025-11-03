@@ -632,6 +632,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tamper_alerts: {
+        Row: {
+          action: string
+          detected_at: string
+          detected_by: string | null
+          id: string
+          new_data: Json | null
+          notes: string | null
+          old_data: Json | null
+          record_id: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          detected_at?: string
+          detected_by?: string | null
+          id?: string
+          new_data?: Json | null
+          notes?: string | null
+          old_data?: Json | null
+          record_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          detected_at?: string
+          detected_by?: string | null
+          id?: string
+          new_data?: Json | null
+          notes?: string | null
+          old_data?: Json | null
+          record_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -679,6 +727,17 @@ export type Database = {
         Args: { _bag_id: string; _user_id: string }
         Returns: boolean
       }
+      create_tamper_alert: {
+        Args: {
+          p_action: string
+          p_new_data?: Json
+          p_old_data?: Json
+          p_record_id: string
+          p_severity?: string
+          p_table_name: string
+        }
+        Returns: undefined
+      }
       generate_bag_id: { Args: never; Returns: string }
       generate_case_number: { Args: never; Returns: string }
       generate_custody_hash: {
@@ -706,6 +765,15 @@ export type Database = {
           p_entity_type: string
         }
         Returns: undefined
+      }
+      verify_custody_chain_integrity: {
+        Args: { p_bag_id: string }
+        Returns: {
+          actual_hash: string
+          expected_hash: string
+          is_valid: boolean
+          log_id: string
+        }[]
       }
     }
     Enums: {

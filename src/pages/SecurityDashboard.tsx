@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { SecurityMonitor } from '@/components/admin/SecurityMonitor';
+import { TamperAlertMonitor } from '@/components/admin/TamperAlertMonitor';
 
 const SecurityDashboard = () => {
   const navigate = useNavigate();
@@ -54,7 +55,10 @@ const SecurityDashboard = () => {
             Real-time security monitoring and activity tracking
           </p>
         </div>
-        <SecurityMonitor />
+        <div className="space-y-6">
+          <TamperAlertMonitor />
+          <SecurityMonitor />
+        </div>
       </main>
     </div>
   );

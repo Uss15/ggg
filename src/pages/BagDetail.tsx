@@ -13,6 +13,7 @@ import { ArrowLeft, Plus, Upload, RefreshCw, Link2, Trash2, FileText } from "luc
 import { getEvidenceCases } from "@/lib/supabase-enhanced";
 import { DisposalRequestModal } from "@/components/disposal/DisposalRequestModal";
 import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
+import { BlockchainVerification } from "@/components/admin/BlockchainVerification";
 import { toast } from "sonner";
 import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";

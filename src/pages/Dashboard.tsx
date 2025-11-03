@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
 import { DashboardStats } from "@/components/DashboardStats";
 import { QuickActions } from "@/components/QuickActions";
+import { OfflineSyncStatus } from "@/components/OfflineSyncStatus";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { EvidenceMap } from "@/components/map/EvidenceMap";
 import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
@@ -192,6 +193,8 @@ export default function Dashboard() {
             </div>
           </div>
 
+          <OfflineSyncStatus />
+          
           <DashboardStats bags={bags} />
           
           <QuickActions />
