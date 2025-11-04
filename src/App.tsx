@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import SecuritySettings from "./pages/SecuritySettings";
 import CreateBag from "./pages/CreateBag";
 import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
@@ -21,7 +23,6 @@ import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
 import Profile from "@/pages/Profile";
-import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "next-themes";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 
@@ -107,6 +108,10 @@ const App = () => {
             <Route
               path="/security"
               element={session ? <SecurityDashboard /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/security-settings"
+              element={session ? <SecuritySettings /> : <Navigate to="/" replace />}
             />
             <Route
               path="/profile"

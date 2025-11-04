@@ -158,6 +158,50 @@ export type Database = {
           },
         ]
       }
+      authorized_zones: {
+        Row: {
+          center_latitude: number
+          center_longitude: number
+          created_at: string
+          id: string
+          is_active: boolean
+          office_id: string | null
+          radius_meters: number
+          updated_at: string
+          zone_name: string
+        }
+        Insert: {
+          center_latitude: number
+          center_longitude: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          office_id?: string | null
+          radius_meters?: number
+          updated_at?: string
+          zone_name: string
+        }
+        Update: {
+          center_latitude?: number
+          center_longitude?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          office_id?: string | null
+          radius_meters?: number
+          updated_at?: string
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorized_zones_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_evidence: {
         Row: {
           bag_id: string
@@ -521,6 +565,39 @@ export type Database = {
           },
         ]
       }
+      ip_access_control: {
+        Row: {
+          access_type: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          is_active: boolean
+          reason: string | null
+        }
+        Insert: {
+          access_type?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -632,6 +709,81 @@ export type Database = {
         }
         Relationships: []
       }
+      role_changes: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_roles: Json | null
+          old_roles: Json | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_roles?: Json | null
+          old_roles?: Json | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_roles?: Json | null
+          old_roles?: Json | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          event_status: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          latitude: number | null
+          location_authorized: boolean | null
+          longitude: number | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_status?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          location_authorized?: boolean | null
+          longitude?: number | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_status?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          location_authorized?: boolean | null
+          longitude?: number | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tamper_alerts: {
         Row: {
           action: string
@@ -727,6 +879,7 @@ export type Database = {
         Args: { _bag_id: string; _user_id: string }
         Returns: boolean
       }
+      check_ip_access: { Args: { p_ip_address: string }; Returns: boolean }
       create_tamper_alert: {
         Args: {
           p_action: string
@@ -765,6 +918,28 @@ export type Database = {
           p_entity_type: string
         }
         Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          p_event_status?: string
+          p_event_type: string
+          p_ip_address?: string
+          p_latitude?: number
+          p_location_authorized?: boolean
+          p_longitude?: number
+          p_metadata?: Json
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      validate_geofence: {
+        Args: { p_latitude: number; p_longitude: number }
+        Returns: {
+          is_authorized: boolean
+          office_name: string
+          zone_name: string
+        }[]
       }
       verify_custody_chain_integrity: {
         Args: { p_bag_id: string }
