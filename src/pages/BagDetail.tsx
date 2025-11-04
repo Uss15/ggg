@@ -272,6 +272,8 @@ export default function BagDetail() {
               <CustodyTimeline entries={custody} />
             </CardContent>
           </Card>
+
+          <BlockchainVerification bagId={bag.id} />
         </div>
       </main>
 
