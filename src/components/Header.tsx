@@ -92,6 +92,10 @@ export const Header = ({ userName }: HeaderProps) => {
           </Button>
           <NotificationBell />
           <ThemeToggle />
+          <Button variant="ghost" size="sm" onClick={() => navigate("/security-settings")}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
           {userName && (
             <Button 
               variant="ghost" 
