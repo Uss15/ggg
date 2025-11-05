@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analysis: {
+        Row: {
+          analysis_type: string
+          confidence: number | null
+          entity_id: string
+          entity_type: string
+          id: string
+          performed_at: string
+          performed_by: string | null
+          result: Json
+        }
+        Insert: {
+          analysis_type: string
+          confidence?: number | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          result: Json
+        }
+        Update: {
+          analysis_type?: string
+          confidence?: number | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          result?: Json
+        }
+        Relationships: []
+      }
       audit_check_items: {
         Row: {
           actual_location: string | null

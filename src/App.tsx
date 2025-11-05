@@ -23,6 +23,7 @@ import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
 import Profile from "@/pages/Profile";
+import AIAnalytics from "@/pages/AIAnalytics";
 import { ThemeProvider } from "next-themes";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 
@@ -116,6 +117,10 @@ const App = () => {
             <Route
               path="/profile"
               element={session ? <Profile /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/ai-analytics"
+              element={session ? <AIAnalytics /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

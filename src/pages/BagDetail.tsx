@@ -14,6 +14,7 @@ import { getEvidenceCases } from "@/lib/supabase-enhanced";
 import { DisposalRequestModal } from "@/components/disposal/DisposalRequestModal";
 import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
 import { BlockchainVerification } from "@/components/admin/BlockchainVerification";
+import { EvidenceClassifier } from "@/components/ai/EvidenceClassifier";
 import { toast } from "sonner";
 import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -240,6 +241,17 @@ export default function BagDetail() {
           )}
 
           <PhotoGallery photos={photos} />
+
+          {photos.length > 0 && (
+            <EvidenceClassifier 
+              imageUrl={photos[0].photo_url} 
+              bagId={bag.id}
+              onClassified={(result) => {
+                console.log('Evidence classified:', result);
+                toast.success(`Classified as: ${result.category}`);
+              }}
+            />
+          )}
 
           {showPhotoUpload ? (
             <PhotoUpload 
