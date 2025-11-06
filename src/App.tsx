@@ -9,7 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
-import SecuritySettings from "./pages/SecuritySettings";
+
 import CreateBag from "./pages/CreateBag";
 import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
@@ -18,12 +18,8 @@ import Cases from "@/pages/Cases";
 import CreateCase from "@/pages/CreateCase";
 import CaseDetail from "@/pages/CaseDetail";
 import DisposalRequests from "@/pages/DisposalRequests";
-import Audits from "@/pages/Audits";
-import AuditLog from "@/pages/AuditLog";
 import Analytics from "@/pages/Analytics";
 import SecurityDashboard from "@/pages/SecurityDashboard";
-import Profile from "@/pages/Profile";
-import AIAnalytics from "@/pages/AIAnalytics";
 import { ThemeProvider } from "next-themes";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 
@@ -95,32 +91,12 @@ const App = () => {
               element={session ? <DisposalRequests /> : <Navigate to="/" replace />}
             />
             <Route
-              path="/audits"
-              element={session ? <Audits /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/audit-log"
-              element={session ? <AuditLog /> : <Navigate to="/" replace />}
-            />
-            <Route
               path="/analytics"
               element={session ? <Analytics /> : <Navigate to="/" replace />}
             />
             <Route
               path="/security"
               element={session ? <SecurityDashboard /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/security-settings"
-              element={session ? <SecuritySettings /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/profile"
-              element={session ? <Profile /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/ai-analytics"
-              element={session ? <AIAnalytics /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

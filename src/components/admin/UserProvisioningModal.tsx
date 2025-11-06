@@ -41,28 +41,18 @@ export function UserProvisioningModal({
     try {
       setIsSubmitting(true);
 
-      // Create user via admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: formData.fullName,
-          badge_number: formData.badgeNumber,
-          phone: formData.phone
+      // Create user via secured backend function
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email: formData.email,
+          fullName: formData.fullName,
+          badgeNumber: formData.badgeNumber,
+          phone: formData.phone,
+          role: formData.role,
         }
       });
 
-      if (authError) throw authError;
-
-      // Assign role
-      const { error: roleError } = await supabase
-        .from('user_roles' as any)
-        .insert({
-          user_id: authData.user.id,
-          role: formData.role
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
 
       toast.success(`User ${formData.email} created successfully. Password reset link sent to their email.`);
       onSuccess();

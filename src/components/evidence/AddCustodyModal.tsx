@@ -44,7 +44,6 @@ const actionToStatus: Record<ActionType, EvidenceStatus> = {
 export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCustodyModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [requireSignature, setRequireSignature] = useState(false);
   const [digitalSignature, setDigitalSignature] = useState<string | null>(null);
 
   const form = useForm<CustodyFormData>({
@@ -57,7 +56,7 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
   });
 
   const onSubmit = async (data: CustodyFormData) => {
-    if (requireSignature && !digitalSignature) {
+    if (!digitalSignature) {
       toast.error("Digital signature is required");
       return;
     }
@@ -81,7 +80,7 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
         latitude: gpsCoordinates?.latitude || null,
         longitude: gpsCoordinates?.longitude || null,
         digital_signature: digitalSignature,
-        signature_timestamp: digitalSignature ? new Date().toISOString() : null,
+        signature_timestamp: new Date().toISOString(),
       });
 
       // Update bag status
@@ -116,7 +115,7 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
       toast.success("Chain of custody entry added with digital signature");
       form.reset();
       setDigitalSignature(null);
-      setRequireSignature(false);
+      // Signature requirement is always enforced
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -199,30 +198,14 @@ export const AddCustodyModal = ({ open, onOpenChange, bagId, onSuccess }: AddCus
               onLocationCapture={(lat, lng) => setGpsCoordinates({ latitude: lat, longitude: lng })}
             />
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requireSignature"
-                checked={requireSignature}
-                onCheckedChange={(checked) => setRequireSignature(checked as boolean)}
-              />
-              <label
-                htmlFor="requireSignature"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Require digital signature
-              </label>
-            </div>
-
-            {requireSignature && (
-              <DigitalSignature
-                title="Officer Signature"
-                onSign={(sig) => {
-                  setDigitalSignature(sig);
-                  toast.success("Signature captured");
-                }}
-                onClear={() => setDigitalSignature(null)}
-              />
-            )}
+            <DigitalSignature
+              title="Officer Signature"
+              onSign={(sig) => {
+                setDigitalSignature(sig);
+                toast.success("Signature captured");
+              }}
+              onClear={() => setDigitalSignature(null)}
+            />
 
             <div className="flex gap-3 justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

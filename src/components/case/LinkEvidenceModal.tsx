@@ -47,20 +47,23 @@ export function LinkEvidenceModal({ open, onOpenChange, caseId, onSuccess }: Lin
     try {
       setIsLoading(true);
       
-      // Get all bags
-      const allBags = await getAllEvidenceBags();
-      
+      // Fetch all accessible evidence bags directly
+      const { data: allBags, error: bagsError } = await supabase
+        .from('evidence_bags')
+        .select('id, bag_id, description, type, current_status');
+      if (bagsError) throw bagsError;
+
       // Get bags already linked to this case
-      const { data: linkedBags } = await (supabase as any)
+      const { data: linkedBags } = await supabase
         .from('case_evidence')
         .select('bag_id')
         .eq('case_id', caseId);
 
-      const linkedBagIds = new Set(linkedBags?.map((l: any) => l.bag_id) || []);
-      
+      const linkedBagIds = new Set((linkedBags || []).map((l: any) => l.bag_id));
+
       // Filter out already linked bags
-      const availableBags = allBags?.filter(bag => !linkedBagIds.has(bag.id)) || [];
-      
+      const availableBags = (allBags || []).filter((bag: any) => !linkedBagIds.has(bag.id));
+
       setBags(availableBags);
       setFilteredBags(availableBags);
     } catch (error) {

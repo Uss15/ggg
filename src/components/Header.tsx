@@ -65,10 +65,6 @@ export const Header = ({ userName }: HeaderProps) => {
                 <BarChart className="h-4 w-4 mr-2" />
                 Analytics
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/ai-analytics")}>
-                <Shield className="h-4 w-4 mr-2" />
-                AI Analytics
-              </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/security")}>
                 <ShieldCheck className="h-4 w-4 mr-2" />
                 Security
@@ -76,14 +72,6 @@ export const Header = ({ userName }: HeaderProps) => {
               <Button variant="outline" size="sm" onClick={() => navigate("/disposal-requests")}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Disposal
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/audits")}>
-                <Search className="h-4 w-4 mr-2" />
-                Audits
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/audit-log")}>
-                <ClipboardList className="h-4 w-4 mr-2" />
-                Audit Log
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
                 <Settings className="h-4 w-4 mr-2" />
@@ -96,20 +84,6 @@ export const Header = ({ userName }: HeaderProps) => {
           </Button>
           <NotificationBell />
           <ThemeToggle />
-          <Button variant="ghost" size="sm" onClick={() => navigate("/security-settings")}>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-          {userName && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/profile")}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              {userName}
-            </Button>
-          )}
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
