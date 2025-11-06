@@ -8,71 +8,59 @@ import { toast } from "sonner";
 import { Shield } from "lucide-react";
 import { z } from "zod";
 
-// Input validation schemas
+// Input validation schema for login only
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255),
   password: z.string().min(1, "Password required"),
 });
 
-const signupSchema = z.object({
-  email: z.string().trim().email("Invalid email address").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(100),
-  fullName: z.string().trim().min(2, "Name too short").max(100, "Name too long"),
-  badgeNumber: z.string().trim().max(50).optional(),
-});
-
 export const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [badgeNumber, setBadgeNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isLogin) {
-        // Validate login inputs
-        const validatedData = loginSchema.parse({ email, password });
-        
-        const { error } = await supabase.auth.signInWithPassword({
-          email: validatedData.email,
-          password: validatedData.password,
-        });
-        if (error) throw error;
-        toast.success("Signed in successfully");
-      } else {
-        // Validate signup inputs
-        const validatedData = signupSchema.parse({
-          email,
-          password,
-          fullName,
-          badgeNumber: badgeNumber || undefined,
-        });
-        
-        const { error } = await supabase.auth.signUp({
-          email: validatedData.email,
-          password: validatedData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: {
-              full_name: validatedData.fullName,
-              badge_number: validatedData.badgeNumber || null,
-            },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created successfully");
-      }
+      // Validate login inputs
+      const validatedData = loginSchema.parse({ email, password });
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: validatedData.email,
+        password: validatedData.password,
+      });
+      if (error) throw error;
+      toast.success("Signed in successfully");
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
+      if (error?.issues) {
+        toast.error(error.issues[0].message);
       } else {
         toast.error(error.message || "Authentication failed");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent to your email");
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
     } finally {
       setLoading(false);
     }
@@ -89,36 +77,11 @@ export const AuthForm = () => {
           </div>
           <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
           <CardDescription className="text-base">
-            {isLogin ? "Sign in to access your evidence management system" : "Create your account to get started"}
+            Sign in to access your evidence management system
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="badgeNumber">Badge Number (Optional)</Label>
-                  <Input
-                    id="badgeNumber"
-                    type="text"
-                    value={badgeNumber}
-                    onChange={(e) => setBadgeNumber(e.target.value)}
-                    placeholder="BADGE-001"
-                  />
-                </div>
-              </>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -131,7 +94,16 @@ export const AuthForm = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(!showForgotPassword)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -141,18 +113,25 @@ export const AuthForm = () => {
                 placeholder="••••••••"
               />
             </div>
+            {showForgotPassword && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleForgotPassword}
+                disabled={loading}
+              >
+                Send Reset Link
+              </Button>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
+              {loading ? "Please wait..." : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+          <div className="mt-4 p-3 bg-muted/50 rounded-md text-center">
+            <p className="text-xs text-muted-foreground">
+              New accounts must be created by administrators.
+            </p>
           </div>
         </CardContent>
       </Card>

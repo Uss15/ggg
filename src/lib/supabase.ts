@@ -247,7 +247,7 @@ export const uploadEvidencePhoto = async (bagId: string, file: File, notes?: str
 export const getSignedPhotoUrl = async (filePath: string): Promise<string> => {
   const { data, error } = await supabase.storage
     .from('evidence-photos')
-    .createSignedUrl(filePath, 3600); // 1 hour expiry
+    .createSignedUrl(filePath, 300); // 5 minute expiry for security
 
   if (error) throw error;
   return data.signedUrl;

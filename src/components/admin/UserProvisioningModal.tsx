@@ -8,6 +8,7 @@ import { Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logError, sanitizeError } from "@/lib/errors";
+import { z } from "zod";
 
 interface UserProvisioningModalProps {
   open: boolean;
@@ -15,6 +16,34 @@ interface UserProvisioningModalProps {
   offices: any[];
   onSuccess: () => void;
 }
+
+// Enhanced validation schema for user provisioning
+const userProvisioningSchema = z.object({
+  email: z.string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email too long"),
+  fullName: z.string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens and apostrophes"),
+  badgeNumber: z.string()
+    .trim()
+    .max(20, "Badge number too long")
+    .regex(/^[A-Z0-9-]*$/, "Badge number can only contain uppercase letters, numbers and hyphens")
+    .optional()
+    .or(z.literal("")),
+  phone: z.string()
+    .trim()
+    .regex(/^(\+964\s?\d{3}\s?\d{3}\s?\d{4}|\+\d{1,3}\s?\d{3,14})$/, "Invalid phone format (use +964 XXX XXX XXXX)")
+    .optional()
+    .or(z.literal("")),
+  role: z.string()
+    .refine((val) => ["admin", "collector", "lab_tech"].includes(val), {
+      message: "Invalid role selected",
+    }),
+});
 
 export function UserProvisioningModal({ 
   open, 
@@ -33,22 +62,26 @@ export function UserProvisioningModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!formData.email || !formData.fullName) {
-      toast.error("Email and full name are required");
-      return;
-    }
-
     try {
+      // Validate form data with enhanced schema
+      const validatedData = userProvisioningSchema.parse({
+        email: formData.email,
+        fullName: formData.fullName,
+        badgeNumber: formData.badgeNumber || "",
+        phone: formData.phone || "",
+        role: formData.role,
+      });
+
       setIsSubmitting(true);
 
       // Create user via secured backend function
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
-          email: formData.email,
-          fullName: formData.fullName,
-          badgeNumber: formData.badgeNumber,
-          phone: formData.phone,
-          role: formData.role,
+          email: validatedData.email,
+          fullName: validatedData.fullName,
+          badgeNumber: validatedData.badgeNumber || null,
+          phone: validatedData.phone || null,
+          role: validatedData.role,
         }
       });
 
@@ -75,9 +108,13 @@ export function UserProvisioningModal({
         role: "collector",
         officeId: ""
       });
-    } catch (error) {
-      logError('CreateUser', error);
-      toast.error(sanitizeError(error));
+    } catch (error: any) {
+      if (error?.issues) {
+        toast.error(error.issues[0].message);
+      } else {
+        logError('CreateUser', error);
+        toast.error(sanitizeError(error));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -124,8 +161,11 @@ export function UserProvisioningModal({
               id="badgeNumber"
               placeholder="BD-12345"
               value={formData.badgeNumber}
-              onChange={(e) => setFormData({ ...formData, badgeNumber: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, badgeNumber: e.target.value.toUpperCase() })}
             />
+            <p className="text-xs text-muted-foreground">
+              Format: Uppercase letters, numbers and hyphens only
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -137,6 +177,9 @@ export function UserProvisioningModal({
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Format: +964 XXX XXX XXXX or international
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -149,8 +192,6 @@ export function UserProvisioningModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="collector">Collector</SelectItem>
-                <SelectItem value="officer">Officer</SelectItem>
-                <SelectItem value="investigator">Investigator</SelectItem>
                 <SelectItem value="lab_tech">Lab Technician</SelectItem>
                 <SelectItem value="admin">Administrator</SelectItem>
               </SelectContent>

@@ -60,11 +60,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Assign role if provided
+    // Assign role if provided (use upsert to handle trigger-assigned roles)
     if (role) {
       const { error: assignError } = await adminClient
         .from('user_roles')
-        .insert({ user_id: created.user!.id, role });
+        .upsert({ user_id: created.user!.id, role }, { onConflict: 'user_id,role', ignoreDuplicates: true });
       if (assignError) {
         console.error('Assign role error', assignError);
         return new Response(JSON.stringify({ error: assignError.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
