@@ -7,15 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusFilter } from "@/components/StatusFilter";
-import { DashboardStats } from "@/components/DashboardStats";
-import { QuickActions } from "@/components/QuickActions";
+import { AdminDashboardView } from "@/components/dashboard/AdminDashboardView";
+import { CollectorDashboardView } from "@/components/dashboard/CollectorDashboardView";
+import { LabTechDashboardView } from "@/components/dashboard/LabTechDashboardView";
 import { OfflineSyncStatus } from "@/components/OfflineSyncStatus";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { EvidenceMap } from "@/components/map/EvidenceMap";
-import { getAllEvidenceBags, getProfile } from "@/lib/supabase";
+import { getAllEvidenceBags, getProfile, getUserRoles } from "@/lib/supabase";
 import { exportToCSV } from "@/lib/csv-export";
-import type { EvidenceStatus } from "@/lib/supabase";
-import { Plus, Search, Package, SlidersHorizontal, Download, Map } from "lucide-react";
+import type { EvidenceStatus, UserRole } from "@/lib/supabase";
+import { Plus, Search, Package, SlidersHorizontal, Download, Map, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [userId, setUserId] = useState<string>("");
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [bags, setBags] = useState<any[]>([]);
   const [filteredBags, setFilteredBags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,7 @@ export default function Dashboard() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"role" | "list">("role"); // Toggle between role-based and full list view
 
   useEffect(() => {
     loadData();
@@ -65,12 +69,19 @@ export default function Dashboard() {
         return;
       }
 
-      const [profileData, bagsData] = await Promise.all([
+      const [profileData, bagsData, roles] = await Promise.all([
         getProfile(user.id),
         getAllEvidenceBags(),
+        getUserRoles(user.id),
       ]);
 
+      setUserId(user.id);
       setProfile(profileData);
+      // Filter roles to only include valid UserRole types
+      const validRoles = roles.filter((r): r is UserRole => 
+        ['collector', 'lab_tech', 'admin'].includes(r)
+      );
+      setUserRoles(validRoles);
       setBags(bagsData || []);
       setFilteredBags(bagsData || []);
     } catch (error: any) {
@@ -153,6 +164,13 @@ export default function Dashboard() {
     }
   };
 
+  // Determine primary role for dashboard view
+  const getPrimaryRole = (): UserRole => {
+    if (userRoles.includes('admin')) return 'admin';
+    if (userRoles.includes('lab_tech')) return 'lab_tech';
+    return 'collector';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -171,160 +189,191 @@ export default function Dashboard() {
     );
   }
 
+  const primaryRole = getPrimaryRole();
+
   return (
     <div className="min-h-screen bg-muted/30">
       <Header userName={profile?.full_name} />
       <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6 mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-bold">Evidence Bags</h2>
-              <p className="text-muted-foreground">Manage and track all evidence bags</p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleExportCSV} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
-              </Button>
-              <Button onClick={() => navigate("/create")}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Bag
-              </Button>
-            </div>
+        {/* View Mode Toggle */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-bold">Dashboard</h2>
+            <p className="text-muted-foreground">
+              {viewMode === "role" 
+                ? `${primaryRole.charAt(0).toUpperCase() + primaryRole.slice(1).replace('_', ' ')} Overview`
+                : "All Evidence Bags"}
+            </p>
           </div>
-
-          <OfflineSyncStatus />
-          
-          <DashboardStats bags={bags} />
-          
-          <QuickActions />
-
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by ID, description, location, or type..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <Collapsible open={showAdvancedFilters}>
-              <CollapsibleContent>
-                <AdvancedFilters
-                  selectedType={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  dateFrom={dateFrom}
-                  onDateFromChange={setDateFrom}
-                  dateTo={dateTo}
-                  onDateToChange={setDateTo}
-                  onClearFilters={() => {
-                    setTypeFilter("all");
-                    setDateFrom("");
-                    setDateTo("");
-                  }}
-                />
-              </CollapsibleContent>
-            </Collapsible>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setViewMode(viewMode === "role" ? "list" : "role")}
+              variant="outline"
+            >
+              {viewMode === "role" ? (
+                <>
+                  <Package className="h-4 w-4 mr-2" />
+                  View All Evidence
+                </>
+              ) : (
+                <>
+                  <Home className="h-4 w-4 mr-2" />
+                  Role Dashboard
+                </>
+              )}
+            </Button>
+            <Button onClick={handleExportCSV} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
-
-          <StatusFilter
-            activeStatus={statusFilter}
-            onStatusChange={setStatusFilter}
-            counts={getStatusCounts()}
-          />
         </div>
 
-        <Tabs defaultValue="list" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="list">
-              <Package className="h-4 w-4 mr-2" />
-              List View
-            </TabsTrigger>
-            <TabsTrigger value="map">
-              <Map className="h-4 w-4 mr-2" />
-              Map View
-            </TabsTrigger>
-          </TabsList>
+        <OfflineSyncStatus />
 
-          <TabsContent value="list">
-            {filteredBags.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              {searchQuery ? (
-                <>
-                  <p className="text-muted-foreground mb-2">No bags match your search</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Try different keywords or clear the search
-                  </p>
-                  <Button onClick={() => setSearchQuery("")} variant="outline">
-                    Clear Search
-                  </Button>
-                </>
-              ) : bags.length === 0 ? (
-                <>
-                  <p className="text-muted-foreground mb-4">No evidence bags yet</p>
-                  <Button onClick={() => navigate("/create")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Evidence Bag
-                  </Button>
-                </>
-              ) : null}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBags.map((bag) => (
-              <Card key={bag.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/bag/${bag.bag_id}`)}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-mono">{bag.bag_id}</CardTitle>
-                    <StatusBadge status={bag.current_status} />
-                  </div>
-                  <CardDescription className="capitalize">{bag.type.replace('_', ' ')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{bag.description}</p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
-                    <span>📍 {bag.location}</span>
-                    <span>👤 {bag.collector?.full_name || 'Unknown'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Role-Based Dashboard View */}
+        {viewMode === "role" ? (
+          <div className="mt-6">
+            {primaryRole === 'admin' && (
+              <AdminDashboardView bags={bags} userCount={0} />
             )}
-          </TabsContent>
+            {primaryRole === 'collector' && (
+              <CollectorDashboardView bags={bags} userId={userId} />
+            )}
+            {primaryRole === 'lab_tech' && (
+              <LabTechDashboardView bags={bags} />
+            )}
+          </div>
+        ) : (
+          /* Full Evidence List View */
+          <div className="space-y-6 mt-6">
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by ID, description, location, or type..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </div>
 
-          <TabsContent value="map">
-            <EvidenceMap
-              locations={filteredBags
-                .filter(bag => bag.latitude && bag.longitude)
-                .map(bag => ({
-                  id: bag.id,
-                  bag_id: bag.bag_id,
-                  latitude: bag.latitude!,
-                  longitude: bag.longitude!,
-                  description: bag.description,
-                  status: bag.current_status,
-                }))}
-              onMarkerClick={(location) => {
-                navigate(`/bag/${location.bag_id}`);
-              }}
+              <Collapsible open={showAdvancedFilters}>
+                <CollapsibleContent>
+                  <AdvancedFilters
+                    selectedType={typeFilter}
+                    onTypeChange={setTypeFilter}
+                    dateFrom={dateFrom}
+                    onDateFromChange={setDateFrom}
+                    dateTo={dateTo}
+                    onDateToChange={setDateTo}
+                    onClearFilters={() => {
+                      setTypeFilter("all");
+                      setDateFrom("");
+                      setDateTo("");
+                    }}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+
+            <StatusFilter
+              activeStatus={statusFilter}
+              onStatusChange={setStatusFilter}
+              counts={getStatusCounts()}
             />
-          </TabsContent>
-        </Tabs>
+
+            <Tabs defaultValue="list" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="list">
+                  <Package className="h-4 w-4 mr-2" />
+                  List View
+                </TabsTrigger>
+                <TabsTrigger value="map">
+                  <Map className="h-4 w-4 mr-2" />
+                  Map View
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="list">
+                {filteredBags.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      {searchQuery ? (
+                        <>
+                          <p className="text-muted-foreground mb-2">No bags match your search</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Try different keywords or clear the search
+                          </p>
+                          <Button onClick={() => setSearchQuery("")} variant="outline">
+                            Clear Search
+                          </Button>
+                        </>
+                      ) : bags.length === 0 ? (
+                        <>
+                          <p className="text-muted-foreground mb-4">No evidence bags yet</p>
+                          <Button onClick={() => navigate("/create")}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create First Evidence Bag
+                          </Button>
+                        </>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredBags.map((bag) => (
+                      <Card key={bag.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/bag/${bag.bag_id}`)}>
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="text-lg font-mono">{bag.bag_id}</CardTitle>
+                            <StatusBadge status={bag.current_status} />
+                          </div>
+                          <CardDescription className="capitalize">{bag.type.replace('_', ' ')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{bag.description}</p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
+                            <span>📍 {bag.location}</span>
+                            <span>👤 {bag.collector?.full_name || 'Unknown'}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="map">
+                <EvidenceMap
+                  locations={filteredBags
+                    .filter(bag => bag.latitude && bag.longitude)
+                    .map(bag => ({
+                      id: bag.id,
+                      bag_id: bag.bag_id,
+                      latitude: bag.latitude!,
+                      longitude: bag.longitude!,
+                      description: bag.description,
+                      status: bag.current_status,
+                    }))}
+                  onMarkerClick={(location) => {
+                    navigate(`/bag/${location.bag_id}`);
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </main>
     </div>
   );
