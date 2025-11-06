@@ -52,7 +52,15 @@ export function UserProvisioningModal({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(data.error);
+      }
 
       toast.success(`User ${formData.email} created successfully. Password reset link sent to their email.`);
       onSuccess();
