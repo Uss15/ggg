@@ -1,7 +1,32 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = {
+  emails: {
+    send: async (params: any) => {
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      
+      if (!RESEND_API_KEY) {
+        throw new Error("RESEND_API_KEY is not configured");
+      }
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to send email: ${error}`);
+      }
+
+      return response.json();
+    },
+  },
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

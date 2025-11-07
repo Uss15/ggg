@@ -71,6 +71,30 @@ serve(async (req) => {
       }
     }
 
+    // Send password reset email
+    try {
+      const resetLink = `${url}/auth/v1/verify?token_hash={token_hash}&type=recovery&redirect_to=${url}`;
+      const { data: resetData, error: resetError } = await adminClient.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+      });
+
+      if (resetError) {
+        console.error('Generate reset link error:', resetError);
+      } else if (resetData?.properties?.action_link) {
+        // Send the password reset email
+        await adminClient.functions.invoke('send-password-reset', {
+          body: {
+            email,
+            resetLink: resetData.properties.action_link,
+          }
+        });
+      }
+    } catch (emailError) {
+      console.error('Error sending password reset email:', emailError);
+      // Don't fail user creation if email fails
+    }
+
     return new Response(JSON.stringify({ success: true, userId: created.user!.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     console.error('admin-create-user error', e);
