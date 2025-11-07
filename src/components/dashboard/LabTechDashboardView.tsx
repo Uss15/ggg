@@ -26,6 +26,7 @@ export function LabTechDashboardView({ bags }: LabTechDashboardViewProps) {
     pending: bags.filter(b => ['collected', 'in_transport'].includes(b.current_status)).length,
   };
 
+  // Show ALL bags in lab/analyzed status (not filtered by user)
   const labBags = bags.filter(b => ['in_lab', 'analyzed'].includes(b.current_status)).slice(0, 5);
 
   return (
@@ -107,7 +108,7 @@ export function LabTechDashboardView({ bags }: LabTechDashboardViewProps) {
               </div>
             </Button>
             <Button 
-              onClick={() => navigate('/scan')}
+              onClick={() => navigate('/dashboard')}
               variant="outline"
               size="lg"
               className="h-auto flex-col gap-2 py-6"
@@ -115,7 +116,7 @@ export function LabTechDashboardView({ bags }: LabTechDashboardViewProps) {
               <ClipboardCheck className="h-8 w-8" />
               <div className="text-center">
                 <div className="font-semibold">Update Status</div>
-                <div className="text-xs opacity-70">Record analysis</div>
+                <div className="text-xs opacity-70">View evidence</div>
               </div>
             </Button>
             <Button 

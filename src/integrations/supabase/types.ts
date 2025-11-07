@@ -235,6 +235,35 @@ export type Database = {
           },
         ]
       }
+      case_assignments: {
+        Row: {
+          assigned_at: string
+          case_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          case_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          case_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_assignments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_evidence: {
         Row: {
           bag_id: string

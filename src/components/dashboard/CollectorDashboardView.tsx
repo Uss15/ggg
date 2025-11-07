@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { 
   Plus, 
-  QrCode, 
   Package, 
   Clock, 
   CheckCircle2, 
@@ -105,18 +104,6 @@ export function CollectorDashboardView({ bags, userId }: CollectorDashboardViewP
               <div className="text-center">
                 <div className="font-semibold">New Evidence</div>
                 <div className="text-xs opacity-90">Create new bag</div>
-              </div>
-            </Button>
-            <Button 
-              onClick={() => navigate('/scan')}
-              variant="outline"
-              size="lg"
-              className="h-auto flex-col gap-2 py-6"
-            >
-              <QrCode className="h-8 w-8" />
-              <div className="text-center">
-                <div className="font-semibold">Scan QR</div>
-                <div className="text-xs opacity-70">Update custody</div>
               </div>
             </Button>
             <Button 

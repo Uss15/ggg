@@ -1,44 +1,57 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Shield } from "lucide-react";
 import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Input validation schema for login only
-const loginSchema = z.object({
-  email: z.string().trim().email("Invalid email address").max(255),
-  password: z.string().min(1, "Password required"),
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
 });
 
-export const AuthForm = () => {
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export function AuthForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetSent, setShowResetSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate login inputs
-      const validatedData = loginSchema.parse({ email, password });
-      
+      const validation = loginSchema.safeParse({ email, password });
+      if (!validation.success) {
+        const error = validation.error.issues[0];
+        toast.error(error.message);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email: validatedData.email,
-        password: validatedData.password,
+        email,
+        password,
       });
+
       if (error) throw error;
-      toast.success("Signed in successfully");
+
+      toast.success("Welcome back!");
+      navigate("/dashboard");
     } catch (error: any) {
-      if (error?.issues) {
-        toast.error(error.issues[0].message);
+      if (error.message?.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password");
       } else {
-        toast.error(error.message || "Authentication failed");
+        toast.error(error.message || "Failed to sign in");
       }
     } finally {
       setLoading(false);
@@ -51,15 +64,24 @@ export const AuthForm = () => {
       return;
     }
 
-    setLoading(true);
     try {
+      const emailValidation = emailSchema.safeParse({ email });
+      if (!emailValidation.success) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
+      setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/`,
       });
+
       if (error) throw error;
-      toast.success("Password reset link sent to your email");
-      setShowForgotPassword(false);
+
+      setShowResetSent(true);
+      toast.success("Password reset email sent! Check your inbox.");
     } catch (error: any) {
+      console.error("Password reset error:", error);
       toast.error(error.message || "Failed to send reset email");
     } finally {
       setLoading(false);
@@ -67,74 +89,70 @@ export const AuthForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Shield className="h-10 w-10 text-primary" />
-            </div>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary">
+            <Shield className="h-6 w-6 text-primary-foreground" />
           </div>
-          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-          <CardDescription className="text-base">
-            Sign in to access your evidence management system
+          <CardTitle className="text-2xl font-bold">Evidence Tracking System</CardTitle>
+          <CardDescription>
+            Secure access to chain of custody management
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {showResetSent && (
+            <Alert className="mb-4 bg-green-50 border-green-200">
+              <AlertDescription className="text-green-800">
+                Password reset email sent! Please check your inbox and spam folder.
+              </AlertDescription>
+            </Alert>
+          )}
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
+                placeholder="officer@police.gov"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="your@email.com"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(!showForgotPassword)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="••••••••"
+                disabled={loading}
               />
             </div>
-            {showForgotPassword && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full" 
-                onClick={handleForgotPassword}
-                disabled={loading}
-              >
-                Send Reset Link
-              </Button>
-            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : "Sign In"}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign In
             </Button>
           </form>
-          <div className="mt-4 p-3 bg-muted/50 rounded-md text-center">
-            <p className="text-xs text-muted-foreground">
-              New accounts must be created by administrators.
-            </p>
-          </div>
+          
+          <Button
+            type="button"
+            variant="link"
+            className="text-sm mt-2 w-full"
+            onClick={handleForgotPassword}
+            disabled={loading}
+          >
+            Forgot your password?
+          </Button>
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Protected access • Chain of custody verification
+          </p>
         </CardContent>
       </Card>
     </div>
   );
-};
+}

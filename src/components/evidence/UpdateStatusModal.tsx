@@ -78,8 +78,20 @@ export function UpdateStatusModal({
         return;
       }
 
+      // Get the bag to find its database ID
+      const { data: bagData, error: bagError } = await supabase
+        .from('evidence_bags')
+        .select('id')
+        .eq('id', bagId)
+        .maybeSingle();
+
+      if (bagError || !bagData) {
+        toast.error("Evidence bag not found");
+        return;
+      }
+
       // Update bag status
-      await updateEvidenceBagStatus(bagId, data.status);
+      await updateEvidenceBagStatus(bagData.id, data.status);
 
       // Add custody entry
       await addChainOfCustodyEntry({

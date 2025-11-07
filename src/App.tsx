@@ -11,7 +11,6 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 import CreateBag from "./pages/CreateBag";
-import ScanQR from "./pages/ScanQR";
 import BagDetail from "./pages/BagDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import Cases from "@/pages/Cases";
