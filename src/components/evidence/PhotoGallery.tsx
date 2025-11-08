@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { EvidencePhoto } from "@/lib/supabase";
+import { EvidencePhoto, getSignedPhotoUrl } from "@/lib/supabase";
 import { format } from "date-fns";
 
 interface PhotoGalleryProps {
@@ -12,28 +12,38 @@ interface PhotoGalleryProps {
 
 export const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
-  const openLightbox = (index: number) => {
-    setSelectedIndex(index);
-  };
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const entries = await Promise.all(
+          photos.map(async (p) => {
+            try {
+              const url = await getSignedPhotoUrl(p.photo_url);
+              return [p.id, url] as const;
+            } catch {
+              return [p.id, ""] as const;
+            }
+          })
+        );
+        if (isMounted) setSignedUrls(Object.fromEntries(entries));
+      } catch {}
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [photos]);
 
-  const closeLightbox = () => {
-    setSelectedIndex(null);
-  };
+  const isVideo = (path: string) => /\.(mp4|webm|mov|ogg)$/i.test(path);
 
-  const goToPrevious = () => {
-    if (selectedIndex !== null && selectedIndex > 0) {
-      setSelectedIndex(selectedIndex - 1);
-    }
-  };
+  const openLightbox = (index: number) => setSelectedIndex(index);
+  const closeLightbox = () => setSelectedIndex(null);
+  const goToPrevious = () => selectedIndex !== null && setSelectedIndex(Math.max(0, selectedIndex - 1));
+  const goToNext = () => selectedIndex !== null && setSelectedIndex(Math.min(photos.length - 1, selectedIndex + 1));
 
-  const goToNext = () => {
-    if (selectedIndex !== null && selectedIndex < photos.length - 1) {
-      setSelectedIndex(selectedIndex + 1);
-    }
-  };
-
-  const downloadPhoto = (url: string, filename: string) => {
+  const downloadFile = (url: string, filename: string) => {
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
@@ -44,47 +54,51 @@ export const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Evidence Photos</CardTitle>
+          <CardTitle className="text-lg">Evidence Media</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No photos uploaded yet.</p>
+          <p className="text-sm text-muted-foreground">No photos or videos uploaded yet.</p>
         </CardContent>
       </Card>
     );
   }
 
   const selectedPhoto = selectedIndex !== null ? photos[selectedIndex] : null;
+  const selectedUrl = selectedPhoto ? signedUrls[selectedPhoto.id] : "";
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Evidence Photos ({photos.length})</CardTitle>
+          <CardTitle className="text-lg">Evidence Media ({photos.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {photos.map((photo, index) => (
-              <div
-                key={photo.id}
-                className="relative group cursor-pointer rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
-                onClick={() => openLightbox(index)}
-              >
-                <img
-                  src={photo.photo_url}
-                  alt={`Evidence photo ${index + 1}`}
-                  className="w-full h-48 object-cover"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <p className="text-white text-sm">Click to view</p>
-                </div>
-                {photo.notes && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2">
-                    <p className="text-white text-xs truncate">{photo.notes}</p>
+            {photos.map((photo, index) => {
+              const url = signedUrls[photo.id] || "";
+              const video = isVideo(photo.photo_url);
+              return (
+                <div
+                  key={photo.id}
+                  className="relative group cursor-pointer rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                  onClick={() => openLightbox(index)}
+                >
+                  {video ? (
+                    <video src={url} className="w-full h-48 object-cover" muted playsInline />
+                  ) : (
+                    <img src={url} alt={`Evidence media ${index + 1}`} className="w-full h-48 object-cover" loading="lazy" />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <p className="text-white text-sm">Click to view</p>
                   </div>
-                )}
-              </div>
-            ))}
+                  {photo.notes && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2">
+                      <p className="text-white text-xs truncate">{photo.notes}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -127,35 +141,34 @@ export const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 </Button>
               )}
 
-              {/* Image */}
-              <img
-                src={selectedPhoto.photo_url}
-                alt={`Evidence photo ${(selectedIndex || 0) + 1}`}
-                className="w-full h-auto max-h-[80vh] object-contain"
-              />
+              {/* Media */}
+              {isVideo(selectedPhoto.photo_url) ? (
+                <video src={selectedUrl} className="w-full h-auto max-h-[80vh] object-contain bg-black" controls />
+              ) : (
+                <img src={selectedUrl} alt={`Evidence media ${(selectedIndex || 0) + 1}`} className="w-full h-auto max-h-[80vh] object-contain" />
+              )}
 
               {/* Metadata */}
               <div className="p-4 bg-card space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      Photo {(selectedIndex || 0) + 1} of {photos.length}
+                      Item {(selectedIndex || 0) + 1} of {photos.length}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Uploaded: {format(new Date(selectedPhoto.uploaded_at), "PPpp")}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => downloadPhoto(
-                      selectedPhoto.photo_url,
-                      `evidence-photo-${selectedPhoto.id}.jpg`
-                    )}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
+                  {selectedUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadFile(selectedUrl, `evidence-media-${selectedPhoto.id}`)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  )}
                 </div>
                 {selectedPhoto.notes && (
                   <div>

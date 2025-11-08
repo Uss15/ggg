@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, Download } from "lucide-react";
 import type { EvidencePhoto } from "@/lib/supabase";
+import { getSignedPhotoUrl } from "@/lib/supabase";
 
 interface PhotoLightboxProps {
   photos: EvidencePhoto[];
@@ -13,36 +14,50 @@ interface PhotoLightboxProps {
 
 export function PhotoLightbox({ photos, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
-  };
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const pairs = await Promise.all(
+          photos.map(async (p) => {
+            try {
+              const url = await getSignedPhotoUrl(p.photo_url);
+              return [p.id, url] as const;
+            } catch {
+              return [p.id, ""] as const;
+            }
+          })
+        );
+        if (alive) setSignedUrls(Object.fromEntries(pairs));
+      } catch {}
+    })();
+    return () => { alive = false };
+  }, [photos]);
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
-  };
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex]);
+
+  const isVideo = (path: string) => /\.(mp4|webm|mov|ogg)$/i.test(path);
+  const currentPhoto = photos[currentIndex];
+  const currentUrl = currentPhoto ? signedUrls[currentPhoto.id] : "";
+
+  const handlePrevious = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
+  const handleNext = () => setCurrentIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
 
   const handleDownload = async () => {
-    const photo = photos[currentIndex];
-    try {
-      const response = await fetch(photo.photo_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `evidence-photo-${currentIndex + 1}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-    }
+    if (!currentUrl) return;
+    const a = document.createElement("a");
+    a.href = currentUrl;
+    a.download = `evidence-media-${currentIndex + 1}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   if (photos.length === 0) return null;
-
-  const currentPhoto = photos[currentIndex];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,11 +83,11 @@ export function PhotoLightbox({ photos, initialIndex, open, onOpenChange }: Phot
           </div>
 
           <div className="flex-1 flex items-center justify-center p-4">
-            <img
-              src={currentPhoto.photo_url}
-              alt={`Evidence photo ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
-            />
+            {isVideo(currentPhoto.photo_url) ? (
+              <video src={currentUrl} className="max-w-full max-h-full object-contain" controls />
+            ) : (
+              <img src={currentUrl} alt={`Evidence media ${currentIndex + 1}`} className="max-w-full max-h-full object-contain" />
+            )}
           </div>
 
           {photos.length > 1 && (
@@ -99,9 +114,7 @@ export function PhotoLightbox({ photos, initialIndex, open, onOpenChange }: Phot
           <div className="bg-black/80 p-4 text-white">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="text-sm text-gray-400">
-                  Photo {currentIndex + 1} of {photos.length}
-                </p>
+                <p className="text-sm text-gray-400">Item {currentIndex + 1} of {photos.length}</p>
                 {currentPhoto.notes && (
                   <p className="mt-2 text-sm">{currentPhoto.notes}</p>
                 )}

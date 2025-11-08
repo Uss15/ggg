@@ -107,18 +107,7 @@ export function LabTechDashboardView({ bags }: LabTechDashboardViewProps) {
                 <div className="text-xs opacity-90">Evidence in lab</div>
               </div>
             </Button>
-            <Button 
-              onClick={() => navigate('/dashboard')}
-              variant="outline"
-              size="lg"
-              className="h-auto flex-col gap-2 py-6"
-            >
-              <ClipboardCheck className="h-8 w-8" />
-              <div className="text-center">
-                <div className="font-semibold">Update Status</div>
-                <div className="text-xs opacity-70">View evidence</div>
-              </div>
-            </Button>
+            {/* Removed Update Status for lab techs */}
             <Button 
               onClick={() => navigate('/cases')}
               variant="outline"
