@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, Clock, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SecurityEvent {
   id: string;
@@ -20,6 +26,7 @@ export const SecurityMonitor = () => {
   const [recentEvents, setRecentEvents] = useState<SecurityEvent[]>([]);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
 
   useEffect(() => {
     fetchSecurityData();
@@ -29,23 +36,24 @@ export const SecurityMonitor = () => {
 
   const fetchSecurityData = async () => {
     try {
-      // Get recent audit log entries
-      const { data: auditData, error } = await supabase
-        .from('audit_log')
+      // Get recent security events
+      const { data: securityData, error: secError } = await supabase
+        .from('security_events')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (secError) throw secError;
 
-      // Transform audit data to security events
-      const events: SecurityEvent[] = (auditData || []).map(entry => ({
+      // Transform security data to events
+      const events: SecurityEvent[] = (securityData || []).map(entry => ({
         id: entry.id,
         user_id: entry.user_id,
-        action: entry.action,
+        action: entry.event_type,
+        ip_address: entry.ip_address || undefined,
         timestamp: entry.created_at,
-        success: true,
-        details: entry.details
+        success: entry.event_status === 'success',
+        details: entry.metadata
       }));
 
       setRecentEvents(events);
@@ -57,8 +65,14 @@ export const SecurityMonitor = () => {
       ).length;
       setFailedAttempts(recentFailed);
 
-      // Mock active sessions (would need session tracking)
-      setActiveSessions(Math.floor(Math.random() * 10) + 1);
+      // Get actual active sessions (unique users in last 30 minutes)
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const uniqueUsers = new Set(
+        events
+          .filter(e => new Date(e.timestamp) > thirtyMinAgo)
+          .map(e => e.user_id)
+      );
+      setActiveSessions(uniqueUsers.size);
 
     } catch (error) {
       console.error('Error fetching security data:', error);
@@ -121,13 +135,18 @@ export const SecurityMonitor = () => {
         <CardContent>
           <div className="space-y-4">
             {recentEvents.slice(0, 10).map((event) => (
-              <div key={event.id} className="flex items-center justify-between border-b pb-2">
+              <div 
+                key={event.id} 
+                className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-accent/50 p-2 rounded transition-colors"
+                onClick={() => setSelectedEvent(event)}
+              >
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium">{event.action}</p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(event.timestamp).toLocaleString()}
+                      {event.ip_address && ` • ${event.ip_address}`}
                     </p>
                   </div>
                 </div>
@@ -139,6 +158,50 @@ export const SecurityMonitor = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Security Event Details</DialogTitle>
+          </DialogHeader>
+          {selectedEvent && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Event Type</p>
+                <p className="font-medium">{selectedEvent.action}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">User ID</p>
+                <p className="font-mono text-sm">{selectedEvent.user_id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Timestamp</p>
+                <p className="font-medium">{new Date(selectedEvent.timestamp).toLocaleString()}</p>
+              </div>
+              {selectedEvent.ip_address && (
+                <div>
+                  <p className="text-sm text-muted-foreground">IP Address</p>
+                  <p className="font-mono text-sm">{selectedEvent.ip_address}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge variant={selectedEvent.success ? "default" : "destructive"}>
+                  {selectedEvent.success ? 'Success' : 'Failed'}
+                </Badge>
+              </div>
+              {selectedEvent.details && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Additional Details</p>
+                  <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto max-h-48">
+                    {JSON.stringify(selectedEvent.details, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

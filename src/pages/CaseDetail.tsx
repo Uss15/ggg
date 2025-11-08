@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Link2, Package, MapPin, Calendar, User, FileText, Lock } from "lucide-react";
 import { getCaseById, getCaseEvidenceBags, unlinkEvidenceFromCase } from "@/lib/supabase-enhanced";
 import { LinkEvidenceModal } from "@/components/case/LinkEvidenceModal";
-import { CaseAssignmentModal } from "@/components/cases/CaseAssignmentModal";
 import { toast } from "sonner";
 import { logError, sanitizeError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -46,7 +45,6 @@ export default function CaseDetail() {
   const [evidence, setEvidence] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [unlinkBagId, setUnlinkBagId] = useState<string | null>(null);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -271,20 +269,12 @@ export default function CaseDetail() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Linked Evidence ({evidence.length})</CardTitle>
-                <div className="flex gap-2">
-                  {isAdmin && (
-                    <Button size="sm" variant="outline" onClick={() => setShowAssignmentModal(true)}>
-                      <User className="h-4 w-4 mr-2" />
-                      Assign Personnel
-                    </Button>
-                  )}
-                  {!caseData.is_closed && (
-                    <Button size="sm" onClick={() => setShowLinkModal(true)}>
-                      <Link2 className="h-4 w-4 mr-2" />
-                      Link Evidence
-                    </Button>
-                  )}
-                </div>
+                {!caseData.is_closed && (
+                  <Button size="sm" onClick={() => setShowLinkModal(true)}>
+                    <Link2 className="h-4 w-4 mr-2" />
+                    Link Evidence
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {evidence.length === 0 ? (
@@ -358,14 +348,6 @@ export default function CaseDetail() {
         open={showLinkModal}
         onOpenChange={setShowLinkModal}
         caseId={caseId!}
-        onSuccess={loadCaseData}
-      />
-
-      <CaseAssignmentModal
-        open={showAssignmentModal}
-        onOpenChange={setShowAssignmentModal}
-        caseId={caseId!}
-        caseNumber={caseData?.case_number || ''}
         onSuccess={loadCaseData}
       />
 

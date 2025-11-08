@@ -12,7 +12,6 @@ import { PhotoGallery } from "@/components/evidence/PhotoGallery";
 import { ArrowLeft, Plus, Upload, RefreshCw, Link2, Trash2, FileText } from "lucide-react";
 import { getEvidenceCases } from "@/lib/supabase-enhanced";
 import { DisposalRequestModal } from "@/components/disposal/DisposalRequestModal";
-import { UpdateStatusModal } from "@/components/evidence/UpdateStatusModal";
 // BlockchainVerification and EvidenceClassifier removed per request
 import { toast } from "sonner";
 import { getEvidenceBag, getChainOfCustody, getEvidencePhotos } from "@/lib/supabase";
@@ -31,7 +30,6 @@ export default function BagDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddCustody, setShowAddCustody] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
-  const [showUpdateStatus, setShowUpdateStatus] = useState(false);
   const [showDisposalRequest, setShowDisposalRequest] = useState(false);
   const [linkedCases, setLinkedCases] = useState<any[]>([]);
   const [userName, setUserName] = useState<string>();
@@ -152,14 +150,6 @@ export default function BagDetail() {
                 <FileText className="h-4 w-4 mr-2" />
                 Export PDF
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowUpdateStatus(true)}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Update Status
-              </Button>
               {bag.current_status !== 'archived' && (
                 <Button 
                   variant="outline" 
@@ -279,14 +269,6 @@ export default function BagDetail() {
         open={showAddCustody}
         onOpenChange={setShowAddCustody}
         bagId={bag.id}
-        onSuccess={loadBagData}
-      />
-
-      <UpdateStatusModal
-        open={showUpdateStatus}
-        onOpenChange={setShowUpdateStatus}
-        bagId={bag.id}
-        currentStatus={bag.current_status}
         onSuccess={loadBagData}
       />
 
