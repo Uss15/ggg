@@ -489,7 +489,7 @@ export const getDisposalRequests = async (status?: 'pending' | 'approved' | 'rej
       *,
       evidence_bags (bag_id, description, type),
       requester:profiles!disposal_requests_requested_by_fkey (full_name, badge_number),
-      reviewer:profiles!disposal_requests_reviewed_by_fkey (full_name)
+      approver:profiles!disposal_requests_approved_by_fkey (full_name)
     `)
     .order('requested_at', { ascending: false });
 
@@ -517,9 +517,9 @@ export const reviewDisposalRequest = async (
     .from('disposal_requests' as any)
     .update({
       status: approved ? 'approved' : 'rejected',
-      reviewed_by: user.id,
-      reviewed_at: new Date().toISOString(),
-      review_notes: reviewNotes
+      approved_by: user.id,
+      approved_at: new Date().toISOString(),
+      notes: reviewNotes
     })
     .eq('id', requestId);
 

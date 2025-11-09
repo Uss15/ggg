@@ -144,19 +144,19 @@ export default function DisposalRequests() {
         {request.status !== 'pending' && (
           <>
             <div>
-              <p className="text-sm font-medium">Reviewed By</p>
+              <p className="text-sm font-medium">Approved By</p>
               <p className="text-sm text-muted-foreground">
-                {request.reviewer?.full_name || 'Unknown'}
+                {request.approver?.full_name || 'Unknown'}
               </p>
               <p className="text-xs text-muted-foreground">
-                {request.reviewed_at && new Date(request.reviewed_at).toLocaleString()}
+                {request.approved_at && new Date(request.approved_at).toLocaleString()}
               </p>
             </div>
 
-            {request.review_notes && (
+            {request.notes && (
               <div>
-                <p className="text-sm font-medium">Review Notes</p>
-                <p className="text-sm text-muted-foreground">{request.review_notes}</p>
+                <p className="text-sm font-medium">Notes</p>
+                <p className="text-sm text-muted-foreground">{request.notes}</p>
               </div>
             )}
           </>
