@@ -487,9 +487,7 @@ export const getDisposalRequests = async (status?: 'pending' | 'approved' | 'rej
     .from('disposal_requests' as any)
     .select(`
       *,
-      evidence_bags (bag_id, description, type),
-      requester:profiles!disposal_requests_requested_by_fkey (full_name, badge_number),
-      approver:profiles!disposal_requests_approved_by_fkey (full_name)
+      evidence_bags!inner (bag_id, description, type)
     `)
     .order('requested_at', { ascending: false });
 
@@ -499,6 +497,31 @@ export const getDisposalRequests = async (status?: 'pending' | 'approved' | 'rej
 
   const { data, error } = await query;
   if (error) throw error;
+  
+  // Fetch user profiles for requester and approver
+  if (data && data.length > 0) {
+    const userIds = [...new Set([
+      ...data.map((r: any) => r.requested_by),
+      ...data.filter((r: any) => r.approved_by).map((r: any) => r.approved_by)
+    ])];
+    
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, badge_number')
+      .in('id', userIds);
+    
+    // Map profiles to requests
+    return data.map((request: any) => {
+      const requester = profiles?.find((p: any) => p.id === request.requested_by);
+      const approver = profiles?.find((p: any) => p.id === request.approved_by);
+      return {
+        ...request,
+        requester,
+        approver
+      };
+    });
+  }
+  
   return data;
 };
 
