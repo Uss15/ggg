@@ -28,19 +28,26 @@ export const UserRoleManager = () => {
 
   const loadUsers = async () => {
     try {
+      setLoading(true);
       // Get all profiles
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, badge_number');
 
-      if (!profiles) return;
+      if (profilesError) throw profilesError;
+      if (!profiles) {
+        setUsers([]);
+        return;
+      }
 
       // Get all user roles
-      const { data: userRoles } = await supabase
+      const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      // Get emails from auth.users (if accessible)
+      if (rolesError) throw rolesError;
+
+      // Map profiles with roles
       const usersWithRoles: User[] = profiles.map(profile => ({
         id: profile.id,
         full_name: profile.full_name,
@@ -53,7 +60,7 @@ export const UserRoleManager = () => {
       setUsers(usersWithRoles);
     } catch (error: any) {
       console.error("Error loading users:", error);
-      toast.error("Failed to load users");
+      toast.error(error.message || "Failed to load users");
     } finally {
       setLoading(false);
     }

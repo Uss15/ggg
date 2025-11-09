@@ -460,10 +460,10 @@ export const createDisposalRequest = async (
     .insert({
       bag_id: bagId,
       requested_by: user.id,
-      disposal_method: disposalMethod,
+      disposal_type: disposalMethod,
       reason,
-      witness_name: witnessName,
-      documentation_url: documentationUrl,
+      witness1_name: witnessName,
+      disposal_documentation: documentationUrl,
       status: 'pending'
     })
     .select()
@@ -472,7 +472,7 @@ export const createDisposalRequest = async (
   if (error) throw error;
 
   await logAudit('request_disposal', 'evidence_bag', bagId, {
-    disposal_method: disposalMethod,
+    disposal_type: disposalMethod,
     reason
   });
 
@@ -529,7 +529,7 @@ export const reviewDisposalRequest = async (
   if (approved) {
     const { data: request } = await (supabase as any)
       .from('disposal_requests')
-      .select('bag_id, disposal_method')
+      .select('bag_id, disposal_type')
       .eq('id', requestId)
       .single();
 
@@ -540,7 +540,7 @@ export const reviewDisposalRequest = async (
         .eq('id', (request as any).bag_id);
 
       await logAudit('approve_disposal', 'evidence_bag', (request as any).bag_id, {
-        disposal_method: (request as any).disposal_method,
+        disposal_type: (request as any).disposal_type,
         review_notes: reviewNotes
       });
     }

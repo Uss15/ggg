@@ -100,7 +100,7 @@ export default function DisposalRequests() {
         <div>
           <p className="text-sm font-medium">Disposal Method</p>
           <p className="text-sm text-muted-foreground">
-            {methodLabels[request.disposal_method as keyof typeof methodLabels]}
+            {methodLabels[request.disposal_type as keyof typeof methodLabels]}
           </p>
         </div>
 
@@ -275,7 +275,7 @@ export default function DisposalRequests() {
               <div>
                 <p className="text-sm font-medium">Disposal Method</p>
                 <p className="text-sm text-muted-foreground">
-                  {methodLabels[reviewingRequest.disposal_method as keyof typeof methodLabels]}
+                  {methodLabels[reviewingRequest.disposal_type as keyof typeof methodLabels]}
                 </p>
               </div>
 
